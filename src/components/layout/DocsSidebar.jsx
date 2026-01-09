@@ -2,38 +2,37 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-const Sidebar = () => {
+const DocsSidebar = () => {
   const location = useLocation();
   const { user, logout } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-const [settingsOpen, setSettingsOpen] = useState(false);
-  
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
   // Helper to check if link is active
   const isActive = (path) => location.pathname === path;
-  
+
   const linkClass = (path) => {
-    const base = "flex items-center gap-3 py-3 px-4 rounded-lg transition-all duration-200";
+    const base =
+      "flex items-center gap-3 py-3 px-4 rounded-lg transition-all duration-200";
     return isActive(path)
       ? `${base} bg-blue-500 text-white shadow-md`
       : `${base} text-gray-700 hover:bg-gray-100`;
   };
-  
+
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
   };
 
   const handleLogout = () => {
     logout();
-    // localStorage.removeItem('accessToken');
-    // localStorage.removeItem('refreshToken');
-    navigate("/", { replace: true }); 
+    navigate("/", { replace: true });
   };
-  
+
   const toggleMobileSidebar = () => {
     setIsMobileOpen(!isMobileOpen);
   };
-  
+
   return (
     <>
       {/* Mobile Menu Button */}
@@ -148,81 +147,42 @@ const [settingsOpen, setSettingsOpen] = useState(false);
         {/* Navigation Links */}
         <nav className="flex-1 p-4 space-y-2">
           <Link
-            to="/dashboard"
+            to="/docs"
             className={linkClass("/dashboard")}
             onClick={() => setIsMobileOpen(false)}
           >
-            <svg
-              className="w-5 h-5 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-              />
-            </svg>
             <span
               className={`overflow-hidden transition-all duration-300 ${
                 isCollapsed ? "lg:w-0 lg:opacity-0" : "w-full opacity-100"
               }`}
             >
-              Home
+              How to install
             </span>
           </Link>
           <Link
-            to="/wallet"
+            to="/docs"
             className={linkClass("/wallet")}
             onClick={() => setIsMobileOpen(false)}
           >
-            <svg
-              className="w-5 h-5 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-              />
-            </svg>
             <span
               className={`overflow-hidden transition-all duration-300 ${
                 isCollapsed ? "lg:w-0 lg:opacity-0" : "w-full opacity-100"
               }`}
             >
-              Wallet
+              How to add users
             </span>
           </Link>{" "}
           <Link
-            to="/users"
+            to="/docs"
             className={linkClass("/users")}
             onClick={() => setIsMobileOpen(false)}
           >
-            <svg
-              className="w-5 h-5 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-              />
-            </svg>
             <span
               className={`overflow-hidden transition-all duration-300 ${
                 isCollapsed ? "lg:w-0 lg:opacity-0" : "w-full opacity-100"
               }`}
             >
-              Manage Users
+              Send money using TransFi APIs
             </span>
           </Link>
           <div className="relative">
@@ -341,19 +301,6 @@ const [settingsOpen, setSettingsOpen] = useState(false);
 
         {/* Logout Button */}
         <div className="p-4 border-t">
-          {/* <Link
-            // to="/"
-            onClick={() => handleLogout()}
-            // className="text-blue-500 hover:underline"
-            className={`
-              w-full bg-red-500 text-white py-2 px-4 rounded-lg 
-              hover:bg-red-600 transition-all duration-200
-              flex items-center justify-center gap-2
-              shadow-md hover:shadow-lg
-            `}
-          >
-            Logout
-          </Link> */}
           <button
             onClick={handleLogout}
             className={`
@@ -390,4 +337,4 @@ const [settingsOpen, setSettingsOpen] = useState(false);
   );
 };
 
-export default Sidebar;
+export default DocsSidebar;

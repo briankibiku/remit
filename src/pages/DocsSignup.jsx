@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { partnerSignup } from '../services/auth';
 import { useAuth } from '../context/AuthContext';
 
-const PartnerSignup = () => {
+const DocsSignup = () => {
   const [formData, setFormData] = useState({
         companyName: '',
         businessIdNumber: '',
@@ -314,7 +314,7 @@ const PartnerSignup = () => {
         {/* Footer */}
         <p className="mt-6 text-center text-gray-600">
           Already have an account?{' '}
-          <Link to="/partner-login" className="font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+          <Link to="/docs-login" className="font-semibold text-blue-600 hover:text-blue-700 transition-colors">
             Login
           </Link>
         </p>
@@ -323,4 +323,4 @@ const PartnerSignup = () => {
   );
 };
 
-export default PartnerSignup;
+export default DocsSignup;
