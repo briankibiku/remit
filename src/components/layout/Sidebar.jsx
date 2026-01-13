@@ -1,54 +1,3 @@
-// import { Link, useLocation } from 'react-router-dom';
-// import { useAuth } from '../../context/AuthContext';
-
-// const Sidebar = () => {
-//   const location = useLocation();
-//   const { user, logout } = useAuth();
-  
-//   // Helper to check if link is active
-//   const isActive = (path) => location.pathname === path;
-  
-//   const linkClass = (path) => {
-//     const base = "block py-2 px-4 rounded transition-colors";
-//     return isActive(path)
-//       ? `${base} bg-blue-500 text-white`
-//       : `${base} text-gray-700 hover:bg-gray-200`;
-//   };
-  
-//   return (
-//     <div className="w-64 bg-white h-screen shadow-lg flex flex-col">
-//       {/* User Info */}
-//       <div className="p-4 border-b">
-//         <h2 className="font-bold text-xl">Dashboard</h2>
-//         <p className="text-sm text-gray-600 mt-1">{user?.email}</p>
-//       </div>
-      
-//       {/* Navigation Links */}
-//       <nav className="flex-1 p-4">
-//         <Link to="/dashboard" className={linkClass('/dashboard')}>
-//           🏠 Home
-//         </Link>
-        
-//         <Link to="/api-keys" className={linkClass('/api-keys')}>
-//           🔑 API Keys
-//         </Link>
-//       </nav>
-      
-//       {/* Logout Button */}
-//       <div className="p-4 border-t">
-//         <button
-//           onClick={logout}
-//           className="w-full bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition-colors"
-//         >
-//           Logout
-//         </button>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Sidebar;
-
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -58,318 +7,137 @@ const Sidebar = () => {
   const { user, logout } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   
-  // Helper to check if link is active
   const isActive = (path) => location.pathname === path;
   
-  const linkClass = (path) => {
-    const base = "flex items-center gap-3 py-3 px-4 rounded-lg transition-all duration-200";
-    return isActive(path)
-      ? `${base} bg-blue-500 text-white shadow-md`
-      : `${base} text-gray-700 hover:bg-gray-100`;
-  };
-  
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
-  };
-  
-  const toggleMobileSidebar = () => {
-    setIsMobileOpen(!isMobileOpen);
-  };
+  const NavItem = ({ to, icon, label, badge }) => (
+    <Link 
+      to={to} 
+      className={`
+        flex items-center gap-3 py-3 px-4 rounded-2xl transition-all duration-200 group
+        ${isActive(to) 
+          ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/30' 
+          : 'text-secondary-500 hover:bg-secondary-100/50 hover:text-secondary-900'}
+      `}
+      onClick={() => setIsMobileOpen(false)}
+    >
+      <div className={`transition-transform duration-200 ${isActive(to) ? 'scale-110' : 'group-hover:scale-110'}`}>
+        {icon}
+      </div>
+      <span className={`font-bold transition-all duration-300 whitespace-nowrap overflow-hidden ${isCollapsed ? 'lg:w-0 lg:opacity-0' : 'w-full opacity-100 text-sm'}`}>
+        {label}
+      </span>
+      {!isCollapsed && badge && (
+        <span className="ml-auto bg-primary-100 text-primary-600 text-[10px] py-0.5 px-2 rounded-full font-extrabold uppercase tracking-tighter shadow-sm">
+          {badge}
+        </span>
+      )}
+    </Link>
+  );
   
   return (
     <>
-      {/* Mobile Menu Button */}
+      {/* Mobile Toggle Button */}
       <button
-        onClick={toggleMobileSidebar}
-        className="lg:hidden fixed top-4 left-4 z-50 bg-blue-500 text-white p-2 rounded-lg shadow-lg hover:bg-blue-600 transition-colors"
-        aria-label="Toggle menu"
+        onClick={() => setIsMobileOpen(!isMobileOpen)}
+        className="lg:hidden fixed top-5 left-5 z-50 bg-white text-secondary-900 p-3 rounded-2xl shadow-xl border border-secondary-100 active:scale-90 transition-all"
       >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           {isMobileOpen ? (
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           ) : (
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           )}
         </svg>
       </button>
 
       {/* Mobile Overlay */}
       {isMobileOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={toggleMobileSidebar}
-        />
+        <div className="lg:hidden fixed inset-0 bg-secondary-900/40 backdrop-blur-sm z-40 transition-all duration-300" onClick={() => setIsMobileOpen(false)} />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar Container */}
       <aside
         className={`
-          fixed lg:static inset-y-0 left-0 z-40
-          bg-white shadow-lg flex flex-col
+          fixed lg:sticky top-0 left-0 z-40 h-screen
+          bg-white border-r border-secondary-100 flex flex-col
           transition-all duration-300 ease-in-out
-          ${isCollapsed ? 'lg:w-20' : 'lg:w-64'}
-          ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          w-64
+          ${isCollapsed ? 'lg:w-24' : 'lg:w-72'}
+          ${isMobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}
+          w-72
         `}
       >
-        {/* Header with Toggle Button */}
-        <div className="p-4 border-b flex items-center justify-between">
-          <div className={`overflow-hidden transition-all duration-300 ${isCollapsed ? 'lg:w-0 lg:opacity-0' : 'w-full opacity-100'}`}>
-            <h2 className="font-bold text-xl text-gray-800">Dashboard</h2>
-            <p className="text-sm text-gray-600 mt-1 truncate">{user?.email}</p>
-          </div>
+        {/* Logo Section */}
+        <div className="p-6 mb-4 flex items-center justify-between">
+          <Link to="/dashboard" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center transition-transform group-hover:rotate-12">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+            </div>
+           
+          </Link>
           
-          {/* Desktop Toggle Button */}
           <button
-            onClick={toggleSidebar}
-            className="hidden lg:block p-2 rounded-lg hover:bg-gray-100 transition-colors"
-            aria-label="Toggle sidebar"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="hidden lg:flex p-2 rounded-xl text-secondary-400 hover:bg-secondary-50 hover:text-secondary-900 transition-all active:scale-90"
           >
-            <svg
-              className={`w-5 h-5 text-gray-600 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-              />
-            </svg>
-          </button>
-
-          {/* Mobile Close Button */}
-          <button
-            onClick={toggleMobileSidebar}
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-            aria-label="Close sidebar"
-          >
-            <svg
-              className="w-5 h-5 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
+            <svg className={`w-5 h-5 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
             </svg>
           </button>
         </div>
         
-        {/* Navigation Links */}
-        <nav className="flex-1 p-4 space-y-2">
-          <Link 
+        {/* Navigation Area */}
+        <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto scrollbar-hide">
+          <NavItem 
             to="/dashboard" 
-            className={linkClass('/dashboard')}
-            onClick={() => setIsMobileOpen(false)}
-          >
-            <svg
-              className="w-5 h-5 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-              />
-            </svg>
-            <span className={`overflow-hidden transition-all duration-300 ${isCollapsed ? 'lg:w-0 lg:opacity-0' : 'w-full opacity-100'}`}>
-              Home
-            </span>
-          </Link> 
-          <Link 
+            label="Home" 
+            icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>}
+          />
+          <NavItem 
             to="/wallet" 
-            className={linkClass('/wallet')}
-            onClick={() => setIsMobileOpen(false)}
-          ><svg
-              className="w-5 h-5 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-              />
-            </svg>
-            <span className={`overflow-hidden transition-all duration-300 ${isCollapsed ? 'lg:w-0 lg:opacity-0' : 'w-full opacity-100'}`}>
-              Wallet
-            </span>
-          </Link> <Link 
+            label="Wallet" 
+            icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>}
+            badge="Soon"
+          />
+          <NavItem 
             to="/users" 
-            className={linkClass('/users')}
-            onClick={() => setIsMobileOpen(false)}
-          ><svg
-              className="w-5 h-5 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-              />
-            </svg>
-            <span className={`overflow-hidden transition-all duration-300 ${isCollapsed ? 'lg:w-0 lg:opacity-0' : 'w-full opacity-100'}`}>
-              Manage Users
-            </span>
-          </Link> 
+            label="Users" 
+            icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
+          />
+          <NavItem 
+            to="/api-keys" 
+            label="API Keys" 
+            icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>}
+          />
         </nav>
 
- 
-        
-        {/* Logout Button */}
-        <div className="p-4 border-t"> 
-          <Link to="/" className="text-blue-500 hover:underline">
-            Logout
-          </Link>
-          <div className="relative">
-            <button
-              onClick={() => !isCollapsed && setSettingsOpen(!settingsOpen)}
-              onMouseEnter={() => isCollapsed && setSettingsOpen(true)}
-              onMouseLeave={() => isCollapsed && setSettingsOpen(false)}
-              className={`
-                w-full flex items-center gap-3 py-3 px-4 rounded-lg transition-all duration-200
-                ${(isActive('/api-keys') || location.pathname.startsWith('/settings')) ? 'bg-blue-500 text-white shadow-md' : 'text-gray-700 hover:bg-gray-100'}
-              `}
-            >
-              <svg
-                className="w-5 h-5 flex-shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-              <span className={`flex-1 text-left overflow-hidden transition-all duration-300 ${isCollapsed ? 'lg:w-0 lg:opacity-0' : 'w-full opacity-100'}`}>
-                Settings
-              </span>
-              <svg
-                className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''} ${isCollapsed ? 'lg:hidden' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-            
-            {/* Submenu - Shows below when expanded, shows as tooltip when collapsed */}
-            <div
-              className={`
-                transition-all duration-300
-                ${isCollapsed 
-                  ? `lg:absolute lg:left-full lg:top-0 lg:ml-2 lg:bg-white lg:rounded-lg lg:shadow-lg lg:border lg:border-gray-200 lg:min-w-[200px] lg:z-50 ${settingsOpen ? 'lg:opacity-100 lg:visible' : 'lg:opacity-0 lg:invisible'}` 
-                  : `overflow-hidden ${settingsOpen ? 'max-h-40 opacity-100 mt-1' : 'max-h-0 opacity-0'}`
-                }
-              `}
-              onMouseEnter={() => isCollapsed && setSettingsOpen(true)}
-              onMouseLeave={() => isCollapsed && setSettingsOpen(false)}
-            >
-              <Link
-                to="/api-keys"
-                className={`
-                  flex items-center gap-3 py-2 px-4 rounded-lg transition-all duration-200
-                  ${isCollapsed ? '' : 'ml-7'}
-                  ${isActive('/api-keys') ? 'bg-blue-100 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-50'}
-                `}
-                onClick={() => {
-                  setIsMobileOpen(false);
-                  setSettingsOpen(false);
-                }}
-              >
-                <svg
-                  className="w-4 h-4 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-                  />
-                </svg>
-                <span className="text-sm">API Keys</span>
-              </Link>
-            </div>
-          </div> 
-          <button
-            onClick={() => {
-              logout();
-              setIsMobileOpen(false);
-            }}
-            className={`
-              w-full bg-red-500 text-white py-2 px-4 rounded-lg 
-              hover:bg-red-600 transition-all duration-200
-              flex items-center justify-center gap-2
-              shadow-md hover:shadow-lg
-            `}
-          >
-            <svg
-              className="w-5 h-5 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-              />
-            </svg>
-            <span className={`overflow-hidden transition-all duration-300 ${isCollapsed ? 'lg:w-0 lg:opacity-0' : 'w-full opacity-100'}`}>
-              Logout
-            </span>
-          </button>
+        {/* User Footer Section */}
+        <div className="p-4 border-t border-secondary-100 bg-secondary-50/30">
+          <div className={`p-4 rounded-[1.5rem] bg-white border border-secondary-100 shadow-sm transition-all duration-300 ${isCollapsed ? 'px-2' : ''}`}>
+             {!isCollapsed && (
+               <div className="flex flex-col mb-4">
+                 <p className="font-bold text-secondary-900 text-sm truncate">{user?.name || user?.email?.split('@')[0]}</p>
+                 <p className="text-secondary-400 text-xs truncate font-medium">{user?.email}</p>
+               </div>
+             )}
+             
+             <button
+               onClick={() => logout()}
+               className={`
+                 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl
+                 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white 
+                 transition-all duration-200 font-bold text-xs active:scale-95
+               `}
+             >
+               <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+               </svg>
+               {!isCollapsed && <span>Logout</span>}
+             </button>
+          </div>
         </div>
       </aside>
     </>
