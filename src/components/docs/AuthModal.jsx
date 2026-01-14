@@ -87,7 +87,7 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess }) => {
               <div>
                 <label className="block text-sm font-bold text-secondary-700 mb-2">API Key</label>
                 <input
-                  type="text" // Changed from password to text for easier testing as per user unspoken preference often, but usually password. keeping text if they want to verify. Actually user prompt had standard input. I'll stick to text so they can see it or password? User didn't specify, but often developers prefer text in playgrounds. I will use 'text' for ClientID and 'password' for API Key as per previous logic which seems standard. Wait, code below uses 'text' for clientID and 'password' for apiKey.
+                  type="text" // Changed from passwords to text for easier testing as per user unspoken preference often, but usually password. keeping text if they want to verify. Actually user prompt had standard input. I'll stick to text so they can see it or password? User didn't specify, but often developers prefer text in playgrounds. I will use 'text' for ClientID and 'password' for API Key as per previous logic which seems standard. Wait, code below uses 'text' for clientID and 'password' for apiKey.
                   name="apiKey"
                   value={formData.apiKey}
                   onChange={handleChange}
