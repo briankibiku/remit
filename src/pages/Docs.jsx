@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ApiDocsSidebar from "../components/layout/ApiDocsSidebar";
 import AuthModal from "../components/docs/AuthModal";
 
@@ -14,6 +14,41 @@ const Docs = () => {
   const [apiResponses, setApiResponses] = useState({});
   const [loadingApi, setLoadingApi] = useState({});
   const [requestBodies, setRequestBodies] = useState({});
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+   const handleNavigate = (sectionId) => {
+    setActiveSection(sectionId);
+    // Scroll to section logic here
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Close mobile menu when screen size changes to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMobileMenuOpen]);
 
   // Helper to update request body for editable areas
   const handleBodyChange = (endpointId, newBody) => {
@@ -219,7 +254,41 @@ const Docs = () => {
 
   return (
     <div className="flex min-h-screen bg-secondary-50 selection:bg-primary-100 selection:text-primary-900">
-      <ApiDocsSidebar activeSection={activeSection} onNavigate={setActiveSection} />
+      {/* <ApiDocsSidebar activeSection={activeSection} onNavigate={setActiveSection} /> */}
+      {/* Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-white border-b flex items-center px-4">
+        <button
+          onClick={() => setIsMobileMenuOpen(true)}
+          className="p-2 rounded-md hover:bg-gray-100"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+        </button>
+
+        {/* <span className="ml-3 font-bold">API Docs</span> */}
+        <span  className="text-xl font-black tracking-tight flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    <span className="w-2 h-2 rounded-full bg-primary-500"></span>
+                    Remit<span className="text-primary-500">.</span>API
+                  </span>
+      </div>
+
+      <ApiDocsSidebar 
+        activeSection={activeSection}
+        onNavigate={handleNavigate}
+        isMobileOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+      />
 
       <main className="flex-1 overflow-y-auto">
         <div className="px-8 py-12 lg:px-16">

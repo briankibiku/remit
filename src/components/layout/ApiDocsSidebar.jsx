@@ -29,7 +29,9 @@ const ApiDocsSidebar = ({ activeSection, onNavigate, isMobileOpen, onClose }) =>
       <div 
         className={`fixed inset-0 bg-secondary-900/50 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300 ${
           isMobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
+          }
+          ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
+        `}
         onClick={onClose}
       />
 
