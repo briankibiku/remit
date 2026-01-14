@@ -69,19 +69,3 @@ When I ask you to create a component or feature:
 7. Write code that looks human-crafted, not AI-generated
 
 Your code should pass as something an experienced developer would write, with attention to detail, consistency, and modern best practices.
-
-
-The Docs.jsx page is a documentation page for users who want to interact with our apis, mainly developers, can you design it in such a way it displays the api and an API parter as we call them can enter their cleint id which looks like 8f5ccc98-7937-49e4-9c90-88978be56213 and their API KEY which looks like cb0e0a39e887fb9f8500f1aa2d5df4615cf181eacf47fd85b343d063cb86eed6 it gets a response like this 
-
-{
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3YzExOWM1Yy1jMWNlLTQzOTAtODU4Yy1iMzA3Y2FiNTJmNDkiLCJyb2xlIjoic3VwZXJfYWRtaW4iLCJhcGlLZXlJZCI6IjU1YzY3YjM1LTZjNDktNDlhMy05MWE2LTUxYmUxOGFmYjg3NCIsImlhdCI6MTc2ODM3NzczNSwiZXhwIjoxNzY4MzgxMzM1fQ.go1iTi5mcBnHn_WOulsBxP8T7uC9mUfq1Zgk4mOZYXU",
-    "expiry": 3600,
-    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3YzExOWM1Yy1jMWNlLTQzOTAtODU4Yy1iMzA3Y2FiNTJmNDkiLCJhcGlLZXlJZCI6IjU1YzY3YjM1LTZjNDktNDlhMy05MWE2LTUxYmUxOGFmYjg3NCIsInR5cGUiOiJwYXJ0bmVyLXJlZnJlc2giLCJpYXQiOjE3NjgzNzc3MzUsImV4cCI6MTc3MDk2OTczNX0.mo6Fw1UZbDfGuCcaEdV5X6AIEfCaP03tQGiEeZuowIs"
-} give the user a chance to copy the accessToken and have a swagger like area where user can set mode of auth as Bearer accessToken user pastes here  then they can be able to call our api whcich send the Bearer token in hte header of our apis, also inidcate api mehtod for a specfic api POST GET etc .  SO have a title of the api, explanation fo what it does and an area to try it that has a tool tip asking api partner to get accesstoken first before trying it out.
-
-I have see the chanegs you have made on Docs file but we can get tid of the Authentication Sandbox and instead have a button to Authenticate which opens a modal aand after feeding client id and api key it dispplays the accesstoken giving user change to copy it then on the playgorunt allow hte body of hte post api client to be editable. Here is an actual login api https://rem.propel.co.ke/v1/propel-remittance/patner/login responsible for reurn of the access token, implement it and also you can use it on the docs swagger like display to the actual passing of a bearer token, when i nispect the network tab should be able to see my api call with the token added to the header
-
-use login creds Clietn ID *
-8f5ccc98-7937-49e4-9c90-88978be56213
-API KEY *
-cb0e0a39e887fb9f8500f1aa2d5df4615cf181eacf47fd85b343d063cb86eed6 to call the login api
