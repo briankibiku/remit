@@ -8,9 +8,7 @@ import ApiKeys from './pages/ApiKeys';
 import Verify from './pages/Verify';
 import Wallet from './pages/Wallet';
 import Users from './pages/Users';
-import Landing from './pages/Landing';
-import DocsLogin from "./pages/DocsLogin";
-import DocsSignup from "./pages/DocsSignup";
+import Landing from './pages/Landing'; 
 import Docs from './pages/Docs';
 
 function App() {
@@ -25,9 +23,7 @@ function App() {
           {/* <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/api-keys" element={<ApiKeys />} /> */}
           <Route path="/wallet" element={<Wallet />} />
-          <Route path="/users" element={<Users />} />
-          <Route path="/docs-login" element={<DocsLogin />} />
-          <Route path="/docs-signup" element={<DocsSignup />} />
+          <Route path="/users" element={<Users />} /> 
           <Route path="/docs" element={<Docs />} />
 
           {/* Protected Routes - Require authentication */}
