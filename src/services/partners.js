@@ -13,6 +13,28 @@ export const regenerate = async (partnerId) => {
   }
 };
 
+
+export const createWalletService = async (currency) => {
+  try {
+    const response = await api.post("/transactions/wallet/create", {
+      currency,
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data?.message || "Wallet creation failed";
+  }
+};
+
+
+export const getWalletService = async () => {
+  try {
+    const response = await api.get("/transactions/wallets");
+    return response.data;
+  } catch (error) {
+    throw error.response?.data?.message || "Wallet creation failed";
+  }
+};
+
 // Get transfer balance 
 export const getTransfiBalance = async (currency = 'KES') => {
   try {
@@ -49,4 +71,25 @@ export const getTransfiBalance = async (currency = 'KES') => {
     throw errorMessage;
   }
 };
+
+export const getTransactions = async (id) => {
+  try {
+    const response = await api.get(`/transactions/${id}/transactions`);
+    
+    return response.data;
+  } catch (error) {
+    throw error.response?.data?.message || "Failed to fetch transactions";
+  }
+};
+
+export const transactService = async (payload) => {
+  try {
+    const response = await api.post("/transactions/transact", payload);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data?.message || "Deposit request failed";
+  }
+};
+
+
  

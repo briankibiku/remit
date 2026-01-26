@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import ApiKeys from './pages/ApiKeys';
 import Verify from './pages/Verify';
 import Wallet from './pages/Wallet';
+import Transact from './pages/Transact';
 import Users from './pages/Users';
 import Landing from './pages/Landing'; 
 import Docs from './pages/Docs';
@@ -22,8 +23,8 @@ function App() {
           <Route path="/verify" element={<Verify />} />
           {/* <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/api-keys" element={<ApiKeys />} /> */}
-          <Route path="/wallet" element={<Wallet />} />
-          <Route path="/users" element={<Users />} /> 
+          {/* <Route path="/wallet" element={<Wallet />} /> */}
+          <Route path="/users" element={<Users />} />
           <Route path="/docs" element={<Docs />} />
 
           {/* Protected Routes - Require authentication */}
@@ -48,6 +49,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <ApiKeys />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wallet"
+            element={
+              <ProtectedRoute>
+                <Wallet />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/transact"
+            element={
+              <ProtectedRoute>
+                <Transact />
               </ProtectedRoute>
             }
           />

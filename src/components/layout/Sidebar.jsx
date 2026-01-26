@@ -181,7 +181,7 @@ const Sidebar = () => {
                 />
               </svg>
             }
-            badge="Soon"
+            badge="New"
           />
           <NavItem
             to="/users"

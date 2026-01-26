@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react";
 import Sidebar from "../components/layout/Sidebar";
 import { useAuth } from "../context/AuthContext";
+import { getTransfiBalance } from '../services/partners';
+
 
 const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [totalCollectionsAmount, setTotalCollectionsAmount] = useState(0);
+  const [currency, setCurrency] = useState('USD');
   const [error, setError] = useState("");
   const { user } = useAuth();
 
@@ -16,15 +20,38 @@ const Dashboard = () => {
     try {
       setLoading(true);
       // Faking API response for now as per current logic
-      setTimeout(() => {
-        setDashboardData({
-          totalBalance: 3000000,
-          ledgerBalance: 1500000,
-          accountBalance: 1500000,
-        });
-        setLoading(false);
-      }, 800);
-      setError("");
+
+      
+      // setTimeout(() => {
+      //   setDashboardData({
+      //     totalBalance: 3000000,
+      //     ledgerBalance: 1500000,
+      //     accountBalance: 1500000,
+      //   });
+      //   setLoading(false);
+      // }, 800);
+      // setError("");
+
+      const response = await getTransfiBalance(currency); 
+      const {
+        totalCollectionsAmount,
+        totalPayoutAmount,
+        totalSettledAmount,
+        totalUnsettledAmount,
+        totalAvailablePrefundingBalance,
+        totalPayoutFee,
+        totalPayoutInTransitBalance,
+        date
+      } = response; 
+      setTotalCollectionsAmount(totalPayoutInTransitBalance);
+      setDashboardData({
+        transfiBalance: totalPayoutAmount,
+        totalBalance: totalCollectionsAmount,
+        ledgerBalance: totalAvailablePrefundingBalance,
+        accountBalance: totalSettledAmount,
+      }); 
+      setLoading(false);
+
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load dashboard data");
       setLoading(false);
@@ -123,7 +150,7 @@ const Dashboard = () => {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-3xl font-extrabold text-secondary-900 tracking-tight">
-                      ${Number(dashboardData.accountBalance).toLocaleString()}
+                      ${Number(dashboardData.transfiBalance).toLocaleString()}
                     </span>
                     <span className="text-emerald-500 text-sm font-bold mt-2 flex items-center gap-1">
                       <svg

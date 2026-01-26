@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { createWalletService, getWalletService, getTransactions, transactService } from "../services/partners";
 import Swal from "sweetalert2";
 
-const Wallet = () => {
+const Transact = () => {
   const [wallets, setWallets] = useState([]);
   const [transactions, setTransactions] = useState({}); // { [walletId]: [...] }
   const [loading, setLoading] = useState(true);
@@ -641,4 +641,4 @@ const Wallet = () => {
 };
 
 
-export default Wallet;
+export default Transact;

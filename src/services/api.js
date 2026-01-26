@@ -39,7 +39,7 @@ api.interceptors.request.use(
     
     // Add token to Authorization header if it exists
     if (token) {
-      config.headers.Authorization = `bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     
     return config;
