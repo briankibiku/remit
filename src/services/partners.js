@@ -82,12 +82,30 @@ export const getTransactions = async (id) => {
   }
 };
 
+export const getAllTransactions = async () => {
+  try {
+    const response = await api.get("/transactions/transactions");
+    return response.data;
+  } catch (error) {
+    throw error.response?.data?.message || "Failed to fetch all transactions";
+  }
+};
+
 export const transactService = async (payload) => {
   try {
     const response = await api.post("/transactions/transact", payload);
     return response.data;
   } catch (error) {
     throw error.response?.data?.message || "Deposit request failed";
+  }
+};
+
+export const getPaymentMethods = async (currency = "KES", direction = "deposit") => {
+  try {
+    const response = await api.get(`/transfi/payment-methods?currency=${currency}&direction=${direction}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data?.message || "Failed to fetch payment methods";
   }
 };
 

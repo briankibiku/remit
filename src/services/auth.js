@@ -109,6 +109,24 @@ export const signup = async (
   }
 };
 
+export const getUsersService = async () => {
+  try {
+    const response = await api.get('/auth/findAll');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data?.message || 'Failed to fetch users';
+  }
+};
+
+export const forgotPasswordService = async (phoneOrEmail) => {
+  try {
+    const response = await api.patch(`/auth/forgot-password?phoneOrEmail=${encodeURIComponent(phoneOrEmail)}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data?.message || 'Failed to send reset request';
+  }
+};
+
 // Logout user
 export const logout = () => {
   clearTokens();

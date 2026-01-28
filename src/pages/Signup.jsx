@@ -98,16 +98,16 @@ const Signup = () => {
               </svg>
             </div>
           </Link>
-          <h1 className="text-4xl font-extrabold text-secondary-900 tracking-tight">
+          <h1 className="text-3xl md:text-4xl font-extrabold text-secondary-900 tracking-tight">
             Create your account
           </h1>
-          <p className="text-secondary-500 mt-3 font-medium text-lg">
+          <p className="text-secondary-500 mt-2 font-medium text-base md:text-lg px-4">
             Join 2 million+ users sending money globally
           </p>
         </div>
 
         {/* Form Card */}
-        <div className="bg-white sm:rounded-[2.5rem] sm:shadow-2xl sm:shadow-secondary-200/50 p-8 sm:p-12 border-0 sm:border border-secondary-100">
+        <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] sm:shadow-2xl sm:shadow-secondary-200/50 p-6 sm:p-12 border sm:border-secondary-100">
           {error && (
             <div className="mb-8 p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-semibold flex items-center gap-3 animate-slide-up">
               <svg

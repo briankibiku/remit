@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import Sidebar from "../components/layout/Sidebar";
 import { useAuth } from "../context/AuthContext";
-import { createWalletService, getWalletService, getTransactions, transactService } from "../services/partners";
+import { createWalletService, getWalletService, getTransactions, transactService, getPaymentMethods, getAllTransactions } from "../services/partners";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
 const Wallet = () => {
   const [wallets, setWallets] = useState([]);
   const [transactions, setTransactions] = useState({}); // { [walletId]: [...] }
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   
   // Modal & Creation States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -132,19 +134,24 @@ const Wallet = () => {
       const walletList = Array.isArray(data) ? data : [];
       setWallets(walletList);
 
-      // Fetch transactions for each wallet using its ID
-      const txMap = {};
-      for (const wallet of walletList) {
+      // Fetch transactions for all wallets in parallel (much faster)
+      const txPromises = walletList.map(async (wallet) => {
         try {
           const txData = await getTransactions(wallet.id);
-          txMap[wallet.id] = Array.isArray(txData) ? txData : [];
+          return { id: wallet.id, data: Array.isArray(txData) ? txData : [] };
         } catch (err) {
           console.error(`Failed to fetch transactions for wallet ${wallet.id}`, err);
-          txMap[wallet.id] = [];
+          return { id: wallet.id, data: [] };
         }
-      }
-      setTransactions(txMap);
+      });
 
+      const results = await Promise.all(txPromises);
+      const txMap = {};
+      results.forEach(res => {
+        txMap[res.id] = res.data;
+      });
+      
+      setTransactions(txMap);
       setLoading(false);
     } catch (err) {
       showError("Fetching wallets failed. Please check your connection.");
@@ -164,26 +171,8 @@ const Wallet = () => {
     if (!activeTransactWallet || !cleanAmount || isNaN(cleanAmount)) return;
 
     try {
-      setIsTransactModalOpen(false);
       setLoading(true);
       
-      const payload = {
-        type: transactionType,
-        walletId: activeTransactWallet.id,
-        idempotencyKey: crypto.randomUUID(),
-        paymentCode: "mpesa",
-        paymentType: "local_wallet",
-        currency: activeTransactWallet.currency,
-        amount: Number(cleanAmount).toFixed(0),
-        additionalDetails: {
-          phone: "700000000",
-          phoneCode: "+254"
-        },
-        purposeCode: "expense_or_medical_reimbursement",
-        redirectUrl: "https://propel.ke",
-        sourceUrl: "https://transfi.com",
-        headlessMode: false, 
-      };
       const payload2 = {
         "type": transactionType,
         "walletId":activeTransactWallet.id,
@@ -203,6 +192,7 @@ const Wallet = () => {
         }
       }; 
       const response = await transactService(payload2);
+      setIsTransactModalOpen(false);
       console.log(`${transactionType} Response:`, response);
       
       showSuccess(`${transactionType.charAt(0).toUpperCase() + transactionType.slice(1)} request initiated successfully!`);
@@ -215,7 +205,23 @@ const Wallet = () => {
       showError(err || `${transactionType} failed`);
       setLoading(false);
     }
-      
+  };
+
+  const handleTransact = async (wallet) => {
+    try {
+      setLoading(true);
+      const data = await getPaymentMethods(wallet.currency, "deposit");
+      navigate("/transact", { 
+        state: { 
+          paymentMethods: data.paymentMethods,
+          wallet: wallet
+        } 
+      });
+    } catch (err) {
+      showError(err || "Failed to initiate transaction");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const EmptyState = () => (
@@ -277,7 +283,7 @@ const Wallet = () => {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3"> 
               {wallets.length > 0 && (
                   <button 
                     onClick={() => { setIsModalOpen(true); setCreateError(""); setSearchTerm(""); }}
@@ -302,66 +308,84 @@ const Wallet = () => {
           ) : wallets.length === 0 ? (
             <EmptyState />
           ) : (
-            <div className="flex flex-nowrap gap-8 overflow-x-auto pb-8 snap-x snap-mandatory no-scrollbar scroll-smooth">
+          <div className="flex flex-row flex-nowrap gap-4 sm:gap-8 overflow-x-auto pb-8 snap-x snap-mandatory no-scrollbar scroll-smooth">
               {wallets.map((wallet) => (
-                <div key={wallet.id} className="min-w-[450px] md:min-w-[600px] snap-center">
-                  <div className="bg-secondary-900 rounded-[3rem] p-10 text-white relative overflow-hidden shadow-2xl mb-8">
-                      <div className="absolute top-0 right-0 w-96 h-96 bg-primary-600/20 rounded-full blur-[100px] -mr-48 -mt-48"></div>
-                      <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-600/10 rounded-full blur-[80px] -ml-32 -mb-32"></div>
+                <div key={wallet.id} className="min-w-[calc(100%-40px)] sm:min-w-[450px] md:min-w-[600px] snap-center">
+                  {/* Wallets component  */}
+                  <div className="bg-secondary-900 rounded-[2rem] sm:rounded-[3rem] p-8 sm:p-12 mb-6 sm:mb-10 text-white relative overflow-hidden shadow-2xl">
+                    <div className="absolute top-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-primary-600/20 rounded-full blur-[80px] sm:blur-[100px] -mr-32 -mt-32 sm:-mr-48 sm:-mt-48"></div>
+                    <div className="absolute bottom-0 left-0 w-48 h-48 sm:w-64 sm:h-64 bg-emerald-600/10 rounded-full blur-[60px] sm:blur-[80px] -ml-24 -mb-24 sm:-ml-32 sm:-mb-32"></div>
 
-                      <div className="relative z-10 flex flex-col justify-between h-full">
-                        <div className="flex justify-between items-start">
-                          <div>
-                              <span className="text-secondary-400 font-black uppercase tracking-[0.2em] text-[10px]">
-                              {wallet.currency} Assets
+                    <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-8 sm:gap-10">
+                        <div>
+                          <span className="text-secondary-400 font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs">
+                            Total Combined Portfolio
+                          </span>
+                          <h2 className="text-4xl sm:text-6xl font-black mt-2 sm:mt-4 tracking-tighter flex items-center gap-3 sm:gap-4">
+                            <span className="text-primary-400 text-2xl sm:text-4xl">{wallet.currency}</span>
+                            {Number(wallet.balance).toLocaleString(undefined, {
+                                      minimumFractionDigits: 2,
+                                  })}
+                          </h2>
+                          <div className="flex items-center gap-4 sm:gap-6 mt-6 sm:mt-10">
+                            <div className="flex flex-col">
+                              <span className="text-secondary-400 text-[10px] font-black uppercase tracking-widest">
+                                Available
                               </span>
-                              <h2 className="text-5xl font-black mt-3 tracking-tighter flex items-center gap-3">
-                                <span className="text-primary-400 text-3xl">{wallet.currency}</span>
-                                {Number(wallet.balance).toLocaleString(undefined, {
-                                    minimumFractionDigits: 2,
-                                })}
-                              </h2>
-                          </div>
-                          <div className={`px-4 py-2 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2`}>
-                            <span className={`w-2 h-2 rounded-full ${wallet.active ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500'}`}></span>
-                            <span className="text-secondary-300 font-bold text-[10px] uppercase tracking-widest">{wallet.active ? 'Active' : 'Locked'}</span>
+                              <span className="text-emerald-400 font-bold text-base sm:text-lg">
+                                {wallet.currency}{Number(wallet.balance).toLocaleString(undefined, {
+                                      minimumFractionDigits: 2,
+                                  })}
+                              </span>
+                            </div>
+                            <div className="w-px h-8 sm:h-10 bg-secondary-700/50"></div>
+                            <div className="flex flex-col">
+                              <span className="text-secondary-400 text-[10px] font-black uppercase tracking-widest">
+                                In Transit
+                              </span>
+                              <span className="text-amber-400 font-bold text-base sm:text-lg">
+                              {wallet.currency}{Number(wallet.balance).toLocaleString(undefined, {
+                                      minimumFractionDigits: 2,
+                                  })}
+                              </span>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="mt-10 flex gap-4">
-                             <button 
-                               onClick={() => openTransactModal(wallet, "deposit")}
-                               className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl font-bold hover:bg-emerald-600 transition-all active:scale-95 shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
-                             >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                                </svg>
-                                Deposit
-                             </button>
-                             <button 
-                               onClick={() => openTransactModal(wallet, "withdraw")}
-                               className="flex-1 py-4 bg-white/10 text-white border border-white/20 rounded-2xl font-bold hover:bg-white/20 transition-all active:scale-95 flex items-center justify-center gap-2"
-                             >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                                </svg>
-                                Withdraw
-                             </button>
+                        <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-end gap-6">
+                          <div className="flex flex-col items-start md:items-end order-2 md:order-1 text-left md:text-right">
+                            <p className="text-white font-black uppercase tracking-widest text-[10px] sm:text-xs">
+                              Secure Vault
+                            </p>
+                            <p className="text-secondary-400 text-[10px] font-medium mt-1">
+                              256-bit AES Encryption
+                            </p>
+                          </div>
+                          
+                          <button 
+                            onClick={() => handleTransact(wallet)}
+                            className="bg-primary-600 text-white p-3 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl font-bold hover:bg-primary-700 transition-all active:scale-95 shadow-lg shadow-primary-500/20 flex items-center gap-2 order-1 md:order-2"
+                          >
+                            <span className="hidden sm:inline">Transact</span>
+                            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                          </button>
                         </div>
-                      </div>
+                    </div>
                   </div>
 
                   {/* Transactions Table */}
-                  <div className="bg-white rounded-[2.5rem] p-8 border border-secondary-100 shadow-sm flex flex-col min-h-[400px]">
-                    <div className="flex items-center justify-between mb-8">
-                      <h3 className="font-bold text-secondary-900 tracking-tight">Recent Activity</h3>
-                      <button className="text-xs font-black text-primary-600 uppercase tracking-widest hover:text-primary-700 transition-colors">
+                  <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 border border-secondary-100 shadow-sm flex flex-col min-h-[300px] sm:min-h-[400px]">
+                    <div className="flex items-center justify-between mb-6 sm:mb-8">
+                      <h3 className="font-bold text-secondary-900 tracking-tight text-sm sm:text-base">Recent Activity</h3>
+                      <button className="text-[10px] sm:text-xs font-black text-primary-600 uppercase tracking-widest hover:text-primary-700 transition-colors">
                         View All
                       </button>
                     </div>
                     
-                    <div className="flex-1">
-                      <table className="w-full text-left">
+                    <div className="flex-1 overflow-x-auto">
+                      <table className="w-full text-left min-w-[400px] sm:min-w-0">
                         <thead>
                           <tr className="border-b border-secondary-50">
                             <th className="pb-4 text-[10px] font-black text-secondary-400 uppercase tracking-widest w-1/2">Transaction Info</th>

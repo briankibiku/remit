@@ -55,16 +55,16 @@ const Login = () => {
               </svg>
             </div>
           </Link>
-          <h1 className="text-3xl font-extrabold text-secondary-900 tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-secondary-900 tracking-tight">
             Welcome back
           </h1>
-          <p className="text-secondary-500 mt-2 font-medium">
+          <p className="text-sm md:text-base text-secondary-500 mt-2 font-medium px-4">
             Enter your credentials to access your account
           </p>
         </div>
 
         {/* Form Card */}
-        <div className="bg-white sm:rounded-3xl sm:shadow-2xl sm:shadow-secondary-200/50 p-8 sm:p-10 border-0 sm:border border-secondary-100">
+        <div className="bg-white rounded-3xl sm:shadow-2xl sm:shadow-secondary-200/50 p-6 sm:p-10 border sm:border-secondary-100">
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-semibold flex items-center gap-3 animate-slide-up">
               <svg
@@ -120,7 +120,7 @@ const Login = () => {
                   Password
                 </label>
                 <Link
-                  to="#"
+                  to="/forgot-password"
                   className="text-xs font-bold text-primary-600 hover:text-primary-700 tracking-tight"
                 >
                   Forgot password?

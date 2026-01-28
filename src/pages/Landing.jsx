@@ -35,24 +35,40 @@ const Landing = () => {
             </Link>
 
             {/* Navigation Buttons */}
-            <div className="flex items-center gap-8">
+            <div className="hidden md:flex items-center gap-8">
               <Link
                 to="/docs"
-                className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
               >
                 Docs
               </Link>
               <Link
                 to="/login"
-                className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
               >
                 Login
               </Link>
               <Link
                 to="/signup"
-                className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg"
+                className="bg-primary-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/20"
               >
                 Get Started
+              </Link>
+            </div>
+
+            {/* Mobile Nav Toggle */}
+            <div className="md:hidden flex items-center gap-4">
+              <Link
+                to="/login"
+                className="text-sm font-bold text-secondary-900 px-4 py-2 hover:bg-secondary-50 rounded-lg transition-colors"
+              >
+                Login
+              </Link>
+              <Link
+                to="/signup"
+                className="bg-primary-600 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-lg shadow-primary-500/20"
+              >
+                Join
               </Link>
             </div>
           </div>
@@ -78,12 +94,12 @@ const Landing = () => {
                 </span>
               </div>
 
-              <h1 className="text-6xl sm:text-7xl font-extrabold text-secondary-900 leading-[1.1] tracking-tight">
+              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-secondary-900 leading-[1.1] tracking-tight">
                 Send money <br />
                 <span className="text-primary-600">worldwide</span> in seconds.
               </h1>
 
-              <p className="text-xl text-secondary-600 leading-relaxed max-w-xl">
+              <p className="text-lg md:text-xl text-secondary-600 leading-relaxed max-w-xl">
                 Experience the fusion of speed and security. Move funds across
                 borders with transparent rates and zero hidden fees.
               </p>
@@ -132,28 +148,28 @@ const Landing = () => {
               </div>
 
               {/* Trust Indicators */}
-              <div className="flex items-center gap-12 pt-6 border-t border-secondary-100">
+              <div className="flex flex-wrap items-center gap-x-12 gap-y-6 pt-6 border-t border-secondary-100">
                 <div className="space-y-1">
-                  <div className="text-3xl font-bold text-secondary-900">
+                  <div className="text-2xl sm:text-3xl font-bold text-secondary-900">
                     195+
                   </div>
-                  <div className="text-sm font-medium text-secondary-500 uppercase tracking-wider">
+                  <div className="text-[10px] sm:text-sm font-medium text-secondary-500 uppercase tracking-wider">
                     Countries
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-3xl font-bold text-secondary-900">
+                  <div className="text-2xl sm:text-3xl font-bold text-secondary-900">
                     2M+
                   </div>
-                  <div className="text-sm font-medium text-secondary-500 uppercase tracking-wider">
+                  <div className="text-[10px] sm:text-sm font-medium text-secondary-500 uppercase tracking-wider">
                     Happy Users
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-3xl font-bold text-secondary-900">
+                  <div className="text-2xl sm:text-3xl font-bold text-secondary-900">
                     $5B+
                   </div>
-                  <div className="text-sm font-medium text-secondary-500 uppercase tracking-wider">
+                  <div className="text-[10px] sm:text-sm font-medium text-secondary-500 uppercase tracking-wider">
                     Processed
                   </div>
                 </div>

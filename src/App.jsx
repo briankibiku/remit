@@ -11,6 +11,7 @@ import Transact from './pages/Transact';
 import Users from './pages/Users';
 import Landing from './pages/Landing'; 
 import Docs from './pages/Docs';
+import ForgotPassword from './pages/ForgotPassword';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/verify" element={<Verify />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           {/* <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/api-keys" element={<ApiKeys />} /> */}
           {/* <Route path="/wallet" element={<Wallet />} /> */}
