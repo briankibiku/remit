@@ -19,7 +19,7 @@ const Verify = () => {
     const messageParam = params.get("message");
 
     if (messageParam) {
-      setMessage(messageParam);
+      setMessage(messageParam); 
       const contacts = extractPhoneAndEmail(messageParam);
       if (contacts) {
         setPhone(contacts.phone);
@@ -29,8 +29,8 @@ const Verify = () => {
   }, []);
 
   const extractPhoneAndEmail = (sentence) => {
-    // Basic regex to find phone (assuming 12 digits) and email
-    const regex = /(\d{12}) and (\S+@\S+\.\S+)/;
+    // Regex to find phone (usually starts with 0 or +) and email
+    const regex = /(\d{10,13}) and (\S+@\S+\.\S+)/;
     const matches = sentence.match(regex);
     if (matches) {
       return {
@@ -47,6 +47,10 @@ const Verify = () => {
     setLoading(true);
 
     try {
+      console.log(email);
+      console.log(phone);
+      console.log( otp);
+      console.log('==============================================');
       const userData = await verify(email, otp);
       if (userData?.message === "Registration successful") {
         navigate(`/dashboard?message=${encodeURIComponent(userData.message)}`);
@@ -80,7 +84,7 @@ const Verify = () => {
           <p className="text-secondary-500 font-medium mt-2 leading-relaxed">
             We've sent a verification code to <br />
             <span className="text-secondary-900 font-bold">
-              {email || "your email"}
+              {email || "your email and phone number"}
             </span>
           </p>
         </div>

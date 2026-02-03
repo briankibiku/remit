@@ -76,7 +76,7 @@ const Transact = () => {
         currency: wallet.currency,
         amount: Number(cleanAmount).toFixed(0),
         additionalDetails: {
-          phone: "700000000",
+          phone: "724609783",
           phoneCode: "+254"
         },
         purposeCode: "expense_or_medical_reimbursement",

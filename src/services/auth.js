@@ -74,31 +74,9 @@ export const verify = async (phoneOrEmail, otp) => {
 };
 
 // Register new user
-export const signup = async (
-  fullName,
-  idNumber,
-  businessIdNumber,
-  gender,
-  dateOfBirth,
-  phoneNumber,
-  email,
-  password,
-  confirmPassword,
-  verified,
-  status
-) => {
+export const signup = async (payload) => {
   try {
-    const response = await api.post('/auth/register', { 
-  fullName,
-  idNumber,
-  businessIdNumber,
-  gender,
-  dateOfBirth,
-  phoneNumber,
-  email,
-  password,
-      confirmPassword, verified, status,
-    });
+    const response = await api.post('/auth/register', payload);
     
     const { message } = response.data; 
     

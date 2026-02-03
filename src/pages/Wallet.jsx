@@ -321,7 +321,7 @@ const Wallet = () => {
                           <span className="text-secondary-400 font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs">
                             Total Combined Portfolio
                           </span>
-                          <h2 className="text-4xl sm:text-6xl font-black mt-2 sm:mt-4 tracking-tighter flex items-center gap-3 sm:gap-4">
+                          <h2 className="text-4l sm:text-4xl font-black mt-2 sm:mt-4 tracking-tighter flex items-center gap-3 sm:gap-4">
                             <span className="text-primary-400 text-2xl sm:text-4xl">{wallet.currency}</span>
                             {Number(wallet.balance).toLocaleString(undefined, {
                                       minimumFractionDigits: 2,
@@ -341,7 +341,7 @@ const Wallet = () => {
                             <div className="w-px h-8 sm:h-10 bg-secondary-700/50"></div>
                             <div className="flex flex-col">
                               <span className="text-secondary-400 text-[10px] font-black uppercase tracking-widest">
-                                In Transit
+                                Actual
                               </span>
                               <span className="text-amber-400 font-bold text-base sm:text-lg">
                               {wallet.currency}{Number(wallet.balance).toLocaleString(undefined, {

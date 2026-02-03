@@ -5,15 +5,21 @@ import { useAuth } from "../context/AuthContext";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
-    fullName: "",
+    firstName: "",
+    lastName: "",
+    country: "KE",
     idNumber: "",
-    businessIdNumber: "",
+    // businessIdNumber: "",
     gender: "",
     dateOfBirth: "",
     phoneNumber: "",
     email: "",
     password: "",
     confirmPassword: "",
+    street: "",
+    city: "",
+    state: "",
+    postalCode: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -49,20 +55,27 @@ const Signup = () => {
 
     setLoading(true);
 
+    const payload = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      country: formData.country,
+      idNumber: formData.idNumber,
+      // businessIdNumber: formData.businessIdNumber,
+      gender: formData.gender,
+      dateOfBirth: formData.dateOfBirth,
+      phoneNumber: formData.phoneNumber,
+      email: formData.email,
+      password: formData.password,
+      address: {
+        street: formData.street,
+        city: formData.city,
+        state: formData.state,
+        postalCode: formData.postalCode,
+      },
+    };
+
     try {
-      const userData = await signup(
-        formData.fullName,
-        formData.idNumber,
-        formData.businessIdNumber,
-        formData.gender,
-        formData.dateOfBirth,
-        formData.phoneNumber,
-        formData.email,
-        formData.password,
-        formData.confirmPassword,
-        false,
-        true
-      );
+      const userData = await signup(payload);
       const { message } = userData;
       navigate(`/verify?message=${encodeURIComponent(message)}`);
     } catch (err) {
@@ -138,37 +151,55 @@ const Signup = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Full Name */}
-                <div className="md:col-span-2 space-y-2">
+                {/* First Name */}
+                <div className="space-y-2">
                   <label className="text-xs font-bold text-secondary-500 uppercase tracking-widest ml-1">
-                    Full Name
+                    First Name
                   </label>
-                  <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none group-focus-within:text-primary-600">
-                      <svg
-                        className="w-5 h-5 text-secondary-400 group-focus-within:text-primary-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                        />
-                      </svg>
-                    </div>
-                    <input
-                      type="text"
-                      name="fullName"
-                      value={formData.fullName}
-                      onChange={handleChange}
-                      className="w-full pl-11 pr-4 py-4 bg-secondary-50 border border-secondary-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 focus:bg-white transition-all font-medium text-secondary-900 placeholder:text-secondary-300"
-                      placeholder="John Doe"
-                      required
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    className="w-full px-5 py-4 bg-secondary-50 border border-secondary-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 focus:bg-white transition-all font-medium text-secondary-900 placeholder:text-secondary-300"
+                    placeholder="John"
+                    required
+                  />
+                </div>
+
+                {/* Last Name */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-secondary-500 uppercase tracking-widest ml-1">
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    className="w-full px-5 py-4 bg-secondary-50 border border-secondary-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 focus:bg-white transition-all font-medium text-secondary-900 placeholder:text-secondary-300"
+                    placeholder="Doe"
+                    required
+                  />
+                </div>
+
+                {/* Country */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-secondary-500 uppercase tracking-widest ml-1">
+                    Country
+                  </label>
+                  <select
+                    name="country"
+                    value={formData.country}
+                    onChange={handleChange}
+                    className="w-full px-5 py-4 bg-secondary-50 border border-secondary-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 focus:bg-white transition-all font-medium text-secondary-900 appearance-none cursor-pointer"
+                    required
+                  >
+                    <option value="KE">Kenya</option>
+                    <option value="UG">Uganda</option>
+                    <option value="TZ">Tanzania</option>
+                    <option value="RW">Rwanda</option>
+                  </select>
                 </div>
 
                 {/* ID Number */}
@@ -186,6 +217,21 @@ const Signup = () => {
                     required
                   />
                 </div>
+
+                {/* Business ID Number */}
+                {/* <div className="space-y-2">
+                  <label className="text-xs font-bold text-secondary-500 uppercase tracking-widest ml-1">
+                    Business ID Number
+                  </label>
+                  <input
+                    type="text"
+                    name="businessIdNumber"
+                    value={formData.businessIdNumber}
+                    onChange={handleChange}
+                    className="w-full px-5 py-4 bg-secondary-50 border border-secondary-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 focus:bg-white transition-all font-medium text-secondary-900"
+                    placeholder="BIZ123456"
+                  />
+                </div> */}
 
                 {/* Phone Number */}
                 <div className="space-y-2">
@@ -216,9 +262,9 @@ const Signup = () => {
                     required
                   >
                     <option value="">Select Gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
 
@@ -240,11 +286,89 @@ const Signup = () => {
               </div>
             </div>
 
-            {/* Section: Account Information */}
+            {/* Section: Address Information */}
             <div className="space-y-6">
               <div className="flex items-center gap-4">
                 <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold text-sm">
                   2
+                </div>
+                <h3 className="text-xl font-bold text-secondary-900">
+                  Address Details
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 {/* Street */}
+                 <div className="md:col-span-2 space-y-2">
+                  <label className="text-xs font-bold text-secondary-500 uppercase tracking-widest ml-1">
+                    Street Address
+                  </label>
+                  <input
+                    type="text"
+                    name="street"
+                    value={formData.street}
+                    onChange={handleChange}
+                    className="w-full px-5 py-4 bg-secondary-50 border border-secondary-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 focus:bg-white transition-all font-medium text-secondary-900"
+                    placeholder="123 Main Street"
+                    required
+                  />
+                </div>
+
+                {/* City */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-secondary-500 uppercase tracking-widest ml-1">
+                    City
+                  </label>
+                  <input
+                    type="text"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleChange}
+                    className="w-full px-5 py-4 bg-secondary-50 border border-secondary-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 focus:bg-white transition-all font-medium text-secondary-900"
+                    placeholder="Nairobi"
+                    required
+                  />
+                </div>
+
+                {/* State */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-secondary-500 uppercase tracking-widest ml-1">
+                    State / County
+                  </label>
+                  <input
+                    type="text"
+                    name="state"
+                    value={formData.state}
+                    onChange={handleChange}
+                    className="w-full px-5 py-4 bg-secondary-50 border border-secondary-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 focus:bg-white transition-all font-medium text-secondary-900"
+                    placeholder="Nairobi County"
+                    required
+                  />
+                </div>
+
+                {/* Postal Code */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-secondary-500 uppercase tracking-widest ml-1">
+                    Postal Code
+                  </label>
+                  <input
+                    type="text"
+                    name="postalCode"
+                    value={formData.postalCode}
+                    onChange={handleChange}
+                    className="w-full px-5 py-4 bg-secondary-50 border border-secondary-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 focus:bg-white transition-all font-medium text-secondary-900"
+                    placeholder="00100"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section: Account Information */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold text-sm">
+                  3
                 </div>
                 <h3 className="text-xl font-bold text-secondary-900">
                   Account Credentials
