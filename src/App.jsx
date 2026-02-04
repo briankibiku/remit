@@ -22,31 +22,51 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/verify" element={<Verify />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/api-keys" element={<ApiKeys />} />
-          <Route path="/wallet" element={<Wallet />} />
-          <Route path="/users" element={<Users />} />
-          <Route path="/partner-login" element={<ApiPartnerLogin />} />
-          <Route path="/partner-signup" element={<PartnerSignup />} />
-          <Route path="/partner-dashboard" element={<PartnerDashboard />} />
-          
-          {/* Protected Routes - Require authentication */}
-          {/* <Route
-            path="/dashboard"
+          {/* Protected Routes */}
+          <Route 
+            path="/dashboard" 
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['user', 'admin']}>
                 <Dashboard />
               </ProtectedRoute>
-            }
+            } 
           />
-          <Route
-            path="/api-keys"
+          <Route 
+            path="/api-keys" 
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['user', 'admin']}>
                 <ApiKeys />
               </ProtectedRoute>
-            }
-          /> */}
+            } 
+          />
+          <Route 
+            path="/wallet" 
+            element={
+              <ProtectedRoute allowedRoles={['user', 'admin']}>
+                <Wallet />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/users" 
+            element={
+              <ProtectedRoute allowedRoles={['user', 'admin']}>
+                <Users />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Partner Routes */}
+          <Route path="/partner-login" element={<ApiPartnerLogin />} />
+          <Route path="/partner-signup" element={<PartnerSignup />} />
+          <Route 
+            path="/partner-dashboard" 
+            element={
+              <ProtectedRoute allowedRoles={['api_partner']}>
+                <PartnerDashboard />
+              </ProtectedRoute>
+            } 
+          />
           
           {/* Default Route - Redirect to dashboard */}
           <Route path="/" element={<Landing />} />

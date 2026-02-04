@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getAccessToken, getRefreshToken, setTokens, clearTokens, isTokenExpired } from '../utils/tokenUtils';
+import { getAccessToken, getRefreshToken, setTokens, clearTokens, isTokenExpired, getUserFromToken } from '../utils/tokenUtils';
 
 // Base API URL - change this to your backend URL
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://rem.propel.co.ke/v1/propel-remittance';
@@ -24,7 +24,7 @@ const processQueue = (error, token = null) => {
       prom.resolve(token);
     }
   });
-  
+
   failedQueue = [];
 };
 
@@ -34,14 +34,14 @@ api.interceptors.request.use(
   (config) => {
     // If request doesn't require authentication, skip adding token
     if (config?.skipAuth) return config;
-    
+
     const token = getAccessToken();
-    
+
     // Add token to Authorization header if it exists
     if (token) {
       config.headers.Authorization = `bearer ${token}`;
     }
-    
+
     return config;
   },
   (error) => {
@@ -52,12 +52,12 @@ api.interceptors.request.use(
 // api.interceptors.request.use(
 //   (config) => {
 //     const token = getAccessToken();
-    
+
 //     // Add token to Authorization header if it exists
 //     if (token) {
 //       config.headers.Authorization = `Bearer ${token}`;
 //     }
-    
+
 //     return config;
 //   },
 //   (error) => {
@@ -74,10 +74,14 @@ api.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-    
+
     // If error is 401 (Unauthorized) and we haven't tried to refresh yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      
+    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.skipAuthRefresh) {
+      // Don't refresh on login or validate endpoints
+      if (originalRequest.url.includes('/login') || originalRequest.url.includes('/validate')) {
+        return Promise.reject(error);
+      }
+
       if (isRefreshing) {
         // If already refreshing, queue this request
         return new Promise((resolve, reject) => {
@@ -91,35 +95,48 @@ api.interceptors.response.use(
             return Promise.reject(err);
           });
       }
-      
-      originalRequest._retry = true;
-      isRefreshing = true;
-      
+
       const refreshToken = getRefreshToken();
-      
+
       if (!refreshToken) {
-        clearTokens();
-        window.location.href = '/login';
+        // If no refresh token, and we are not on a public page, redirect to login
+        // But for partner login page, we might just want to fail without redirecting
+        if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/signup')) {
+          clearTokens();
+          window.location.href = '/login';
+        }
         return Promise.reject(error);
       }
-      
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      const user = getUserFromToken(refreshToken);
+      const isPartner = user?.role === 'api_partner';
+      const refreshUrl = isPartner
+        ? `${API_BASE_URL}/patner/refresh-token`
+        : `${API_BASE_URL}/auth/refresh`;
+
       try {
         // Call refresh token endpoint
-        const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-          refreshToken
+        // Using PUT for partner as per user convention, POST for others
+        const response = await axios({
+          method: isPartner ? 'put' : 'post',
+          url: refreshUrl,
+          data: { refreshToken }
         });
-        
+
         const { accessToken, refreshToken: newRefreshToken } = response.data;
-        
+
         // Store new tokens
-        setTokens(accessToken, newRefreshToken);
-        
+        setTokens(accessToken, newRefreshToken || refreshToken);
+
         // Update the failed request with new token
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        
+
         // Process queued requests
         processQueue(null, accessToken);
-        
+
         // Retry the original request
         return api(originalRequest);
       } catch (refreshError) {
@@ -131,7 +148,7 @@ api.interceptors.response.use(
         isRefreshing = false;
       }
     }
-    
+
     return Promise.reject(error);
   }
 );

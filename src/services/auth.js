@@ -4,9 +4,9 @@ import { setTokens, clearTokens, getAccessToken, getUserFromToken } from '../uti
 // Login user
 export const login = async (emailAddress, password) => {
   try {
-    const response = await api.put('/auth/login', { emailAddress, password }); 
-    const { message } = response.data; 
-    
+    const response = await api.put('/auth/login', { emailAddress, password });
+    const { message } = response.data;
+
     // Return user data
     return { message };
   } catch (error) {
@@ -14,15 +14,27 @@ export const login = async (emailAddress, password) => {
   }
 };
 // Partner login
-export const partnerLogin = async (clientId, apiKey) => {
+export const partnerLogin = async (emailAddress, password) => {
   try {
-    const response = await api.post('/patner/login', { clientId, apiKey });
-    const { accessToken, refreshToken } = response.data;
-    
-    // Return user data
-    return  { accessToken, refreshToken };
+    const response = await api.put('/patner/login', { emailAddress, password });
+    return response.data; // Returns { phoneNumber, emailAddress, message }
   } catch (error) {
     throw error.response?.data?.message || 'Partner login failed';
+  }
+};
+
+// Partner validate OTP
+export const partnerValidate = async (phoneOrEmail, otp) => {
+  try {
+    const response = await api.put('/patner/validate', { phoneOrEmail, otp });
+    const { message, token } = response.data;
+
+    // Store token
+    setTokens(token, token);
+
+    return { message, token };
+  } catch (error) {
+    throw error.response?.data?.message || 'Validation failed';
   }
 };
 // Partner signup
@@ -48,7 +60,7 @@ export const partnerSignup = async (
       role
     });
     const { partnerId, clientId, apiKey } = response.data;
-    
+
     // Return user data
     return { partnerId, clientId, apiKey };
   } catch (error) {
@@ -62,10 +74,10 @@ export const verify = async (phoneOrEmail, otp) => {
   try {
     const response = await api.put('/auth/validate', { phoneOrEmail, otp });
     const { message, token } = response.data;
-    
+
     // Store tokens
     setTokens(token);
-    
+
     // Return user data
     return { message, token };
   } catch (error) {
@@ -88,20 +100,20 @@ export const signup = async (
   status
 ) => {
   try {
-    const response = await api.post('/auth/register', { 
-  fullName,
-  idNumber,
-  businessIdNumber,
-  gender,
-  dateOfBirth,
-  phoneNumber,
-  email,
-  password,
+    const response = await api.post('/auth/register', {
+      fullName,
+      idNumber,
+      businessIdNumber,
+      gender,
+      dateOfBirth,
+      phoneNumber,
+      email,
+      password,
       confirmPassword, verified, status,
     });
-    
-    const { message } = response.data; 
-    
+
+    const { message } = response.data;
+
     // Return user data
     return { message };
   } catch (error) {
@@ -112,6 +124,7 @@ export const signup = async (
 // Logout user
 export const logout = () => {
   clearTokens();
+  window.location.href = '/';
 };
 
 // Check if user is authenticated
@@ -123,5 +136,6 @@ export const isAuthenticated = () => {
 // Get current user from token
 export const getCurrentUser = () => {
   const token = getAccessToken();
+  console.log("token", token);
   return getUserFromToken(token);
 };

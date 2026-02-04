@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import Sidebar from '../components/layout/Sidebar';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { getTransfiBalance } from '../services/partners';
+import { getTransfiBalance, getPartnerDetails, getPartnerWallets } from '../services/partners';
 
 const PartnerDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
+  const [partnerProfile, setPartnerProfile] = useState(null);
+  const [partnerWallets, setPartnerWallets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalCollectionsAmount, setTotalCollectionsAmount] = useState(0);
   const [currency, setCurrency] = useState('USD');
@@ -15,11 +17,32 @@ const PartnerDashboard = () => {
   const { user } = useAuth();
   
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    // fetchDashboardData();
+    console.log("user", user);
+    if (user?.sub) {
+      // fetchPartnerProfile(user.sub);
+      // fetchWallets();
+    }
+  }, [user]);
 
   
-   
+  const fetchPartnerProfile = async (id) => {
+    try {
+      const profile = await getPartnerDetails(id);
+      setPartnerProfile(profile);
+    } catch (err) {
+      console.error('Error fetching partner profile:', err);
+    }
+  };
+  const fetchWallets = async () => {
+    try {
+      const wallets = await getPartnerWallets();
+      setPartnerWallets(wallets);
+    } catch (err) {
+      console.error('Error fetching partner wallets:', err);
+    }
+  };
+
   const fetchDashboardData = async () => {
     setLoading(true);
     try {

@@ -7,7 +7,8 @@ const Sidebar = () => {
   const { user, logout } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   
   const isActive = (path) => location.pathname === path;
   
@@ -38,6 +39,38 @@ const Sidebar = () => {
   
   return (
     <>
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-fade-in">
+          <div className="absolute inset-0 bg-secondary-900/40 backdrop-blur-md" onClick={() => setShowLogoutModal(false)} />
+          <div className="relative bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl border border-secondary-100 animate-slide-up">
+            <div className="w-16 h-16 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-black text-secondary-900 text-center tracking-tight mb-2">Sign Out?</h3>
+            <p className="internal text-secondary-500 text-center font-medium mb-8 leading-relaxed">
+              Are you sure you want to end your current session? You'll need to sign back in to access your dashboard.
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="py-4 rounded-2xl font-bold font-sm bg-secondary-50 text-secondary-600 hover:bg-secondary-100 transition-all active:scale-95"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => logout()}
+                className="py-4 rounded-2xl font-bold font-sm bg-red-600 text-white shadow-lg shadow-red-500/20 hover:bg-red-700 transition-all active:scale-95"
+              >
+                Yes, Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mobile Toggle Button */}
       <button
         onClick={() => setIsMobileOpen(!isMobileOpen)}
@@ -125,7 +158,7 @@ const Sidebar = () => {
              )}
              
              <button
-               onClick={() => logout()}
+               onClick={() => setShowLogoutModal(true)}
                className={`
                  w-full flex items-center justify-center gap-2 py-2.5 rounded-xl
                  bg-red-50 text-red-600 hover:bg-red-600 hover:text-white 
