@@ -70,6 +70,7 @@ const Wallet = () => {
       timer: 4000,
       timerProgressBar: true,
       showConfirmButton: false,
+      showCloseButton: true,
       toast: true,
       position: "top-end",
       background: "#fff",
@@ -88,6 +89,7 @@ const Wallet = () => {
       timer: 3000,
       timerProgressBar: true,
       showConfirmButton: false,
+      showCloseButton: true,
       toast: true,
       position: "top-end",
       background: "#fff",
@@ -207,21 +209,12 @@ const Wallet = () => {
     }
   };
 
-  const handleTransact = async (wallet) => {
-    try {
-      setLoading(true);
-      const data = await getPaymentMethods(wallet.currency, "deposit");
-      navigate("/transact", { 
-        state: { 
-          paymentMethods: data.paymentMethods,
-          wallet: wallet
-        } 
-      });
-    } catch (err) {
-      showError(err || "Failed to initiate transaction");
-    } finally {
-      setLoading(false);
-    }
+  const handleTransact = (wallet) => {
+    navigate("/transact", { 
+      state: { 
+        wallet: wallet
+      } 
+    });
   };
 
   const EmptyState = () => (

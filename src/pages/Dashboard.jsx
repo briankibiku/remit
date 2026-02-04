@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/layout/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import { getTransfiBalance } from '../services/partners';
+import Swal from "sweetalert2";
 
 
 const Dashboard = () => {
@@ -10,6 +12,7 @@ const Dashboard = () => {
   const [currency, setCurrency] = useState('USD');
   const [error, setError] = useState("");
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchDashboardData();
@@ -40,6 +43,28 @@ const Dashboard = () => {
     }
   };
 
+  const handleDownload = () => {
+    Swal.fire({
+      title: 'Feature Coming Soon',
+      text: 'Export capability is being developed.',
+      icon: 'info',
+      toast: true,
+      position: 'top-end',
+      timer: 4000,
+      timerProgressBar: true,
+      showConfirmButton: false,
+      showCloseButton: true,
+      background: '#fff',
+      color: '#3b82f6',
+      iconColor: '#3b82f6',
+      customClass: {
+        popup: 'rounded-2xl border border-blue-100 shadow-2xl',
+        title: 'font-bold text-sm',
+        htmlContainer: 'text-xs font-medium text-secondary-500'
+      }
+    });
+  };
+
   return (
     <div className="flex min-h-screen bg-secondary-50 selection:bg-primary-100 selection:text-primary-900">
       <Sidebar />
@@ -58,11 +83,17 @@ const Dashboard = () => {
             </div>
 
             <div className="flex items-center justify-center md:justify-end gap-3">
-              <button className="px-5 py-2.5 bg-white border border-secondary-200 rounded-xl text-secondary-700 font-bold hover:bg-secondary-50 transition-all active:scale-95 shadow-sm text-sm">
+              <button 
+                onClick={handleDownload}
+                className="px-5 py-2.5 bg-white border border-secondary-200 rounded-xl text-secondary-700 font-bold hover:bg-secondary-50 transition-all active:scale-95 shadow-sm text-sm"
+              >
                 Download
               </button>
-              <button className="px-5 py-2.5 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-all active:scale-95 shadow-lg shadow-primary-500/20 text-sm">
-                Send Money
+              <button 
+                onClick={() => navigate("/wallet")}
+                className="px-5 py-2.5 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-all active:scale-95 shadow-lg shadow-primary-500/20 text-sm"
+              >
+                Transact
               </button>
             </div>
           </div>

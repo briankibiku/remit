@@ -17,6 +17,7 @@ const ForgotPassword = () => {
       toast: true,
       position: "top-end",
       showConfirmButton: false,
+      showCloseButton: true,
     });
   };
 
@@ -29,6 +30,7 @@ const ForgotPassword = () => {
       toast: true,
       position: "top-end",
       showConfirmButton: false,
+      showCloseButton: true,
     });
   };
 

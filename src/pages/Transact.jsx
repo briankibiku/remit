@@ -2,25 +2,44 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "../components/layout/Sidebar";
 import { useAuth } from "../context/AuthContext";
-import { transactService } from "../services/partners";
+import { transactService, getPaymentMethods, getPaymentSession } from "../services/partners";
 import Swal from "sweetalert2";
 
 const Transact = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { paymentMethods, wallet } = location.state || { paymentMethods: [], wallet: null };
+  const { wallet } = location.state || { wallet: null };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState(null);
   const [amount, setAmount] = useState("");
   const [transactionType, setTransactionType] = useState("deposit");
+  const [paymentMethods, setPaymentMethods] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [fetchingMethods, setFetchingMethods] = useState(false);
+  const [isPolling, setIsPolling] = useState(false);
+  const [additionalData, setAdditionalData] = useState({});
 
   useEffect(() => {
     if (!wallet) {
       navigate("/wallet");
+      return;
     }
-  }, [wallet, navigate]);
+    fetchMethods();
+  }, [wallet, transactionType]);
+
+  const fetchMethods = async () => {
+    try {
+      setFetchingMethods(true);
+      const data = await getPaymentMethods(wallet.currency, transactionType);
+      setPaymentMethods(data.paymentMethods || []);
+    } catch (err) {
+      console.error("Failed to fetch payment methods:", err);
+      showError("Failed to load payment methods");
+    } finally {
+      setFetchingMethods(false);
+    }
+  };
 
   const formatAmount = (value) => {
     if (!value) return "";
@@ -40,6 +59,7 @@ const Transact = () => {
       toast: true,
       position: "top-end",
       showConfirmButton: false,
+      showCloseButton: true,
     });
   };
 
@@ -52,17 +72,42 @@ const Transact = () => {
       toast: true,
       position: "top-end",
       showConfirmButton: false,
+      showCloseButton: true,
     });
   };
 
   const handleMethodClick = (method) => {
     setSelectedMethod(method);
+    setAmount("");
+    setAdditionalData({});
     setIsModalOpen(true);
+  };
+
+  const handleAdditionalDataChange = (key, value) => {
+    setAdditionalData(prev => ({
+      ...prev,
+      [key]: value
+    }));
   };
 
   const initiateTransaction = async () => {
     const cleanAmount = amount.replace(/,/g, "");
     if (!selectedMethod || !cleanAmount || isNaN(cleanAmount) || Number(cleanAmount) <= 0) return;
+
+    // Open a blank window immediately on user gesture to bypass popup blockers
+    const paymentWindow = window.open('about:blank', '_blank');
+    if (paymentWindow) {
+      paymentWindow.document.write(`
+        <html>
+          <body style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; background: #f9fafb; margin: 0;">
+            <div style="border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite;"></div>
+            <h2 style="color: #111827; margin-top: 20px;">Preparing Payment Portal...</h2>
+            <p style="color: #6b7280; font-size: 14px;">Please do not close this window.</p>
+            <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+          </body>
+        </html>
+      `);
+    }
 
     try {
       setLoading(true);
@@ -76,22 +121,64 @@ const Transact = () => {
         currency: wallet.currency,
         amount: Number(cleanAmount).toFixed(0),
         additionalDetails: {
-          phone: "724609783",
-          phoneCode: "+254"
+          ...additionalData,
+          phone: additionalData.phone || "724609783",
+          phoneCode: additionalData.phoneCode || "+254",
+          purpose: "payment_for_business_services"
         },
-        purposeCode: "expense_or_medical_reimbursement",
+        purposeCode:  "expense_or_medical_reimbursement",
         redirectUrl: "https://propel.ke",
         sourceUrl: "https://transfi.com",
         headlessMode: false, 
       };
 
-      await transactService(payload);
-      setIsModalOpen(false);
-      showSuccess(`${transactionType.charAt(0).toUpperCase() + transactionType.slice(1)} request initiated successfully!`);
-      navigate("/wallet");
+      const response = await transactService(payload);
+      
+      if (response.txId) {
+        setIsPolling(true);
+        let pollCount = 0;
+        const maxPolls = 10;
+
+        const pollInterval = setInterval(async () => {
+          pollCount++;
+          try {
+            const session = await getPaymentSession(response.txId);
+            if (session.status === "initiation_success_callback_recieved" && session.paymentUrl) {
+              clearInterval(pollInterval);
+              setIsPolling(false);
+              setLoading(false);
+              
+              if (paymentWindow && !paymentWindow.closed) {
+                paymentWindow.location.href = session.paymentUrl;
+              } else {
+                // Fallback if user closed the tab or blocker won
+                window.location.href = session.paymentUrl;
+              }
+              
+              navigate("/wallet");
+            }
+          } catch (err) {
+            console.error("Polling error:", err);
+          }
+
+          if (pollCount >= maxPolls) {
+            clearInterval(pollInterval);
+            if (paymentWindow) paymentWindow.close();
+            setIsPolling(false);
+            setLoading(false);
+            showError("Payment session timed out. Please check your wallet for updates.");
+            navigate("/wallet");
+          }
+        }, 1000);
+      } else {
+        if (paymentWindow) paymentWindow.close();
+        setIsModalOpen(false);
+        showSuccess(`${transactionType.charAt(0).toUpperCase() + transactionType.slice(1)} request initiated successfully!`);
+        navigate("/wallet");
+      }
     } catch (err) {
+      if (paymentWindow) paymentWindow.close();
       showError(err || `${transactionType} failed`);
-    } finally {
       setLoading(false);
     }
   };
@@ -104,23 +191,54 @@ const Transact = () => {
 
       <main className="flex-1 overflow-y-auto relative">
         <div className="max-w-7xl mx-auto px-6 py-10 lg:px-12 min-h-[calc(100vh-80px)] flex flex-col">
-          <div className="mb-8 md:mb-12 animate-fade-in">
-            <button 
-              onClick={() => navigate("/wallet")}
-              className="flex items-center gap-2 text-secondary-500 font-bold hover:text-primary-600 transition-colors mb-4 md:mb-6 group text-sm md:text-base"
-            >
-              <svg className="w-4 h-4 md:w-5 md:h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back to Wallets
-            </button>
-            <h1 className="text-2xl md:text-4xl font-black text-secondary-900 tracking-tight">Select Payment Method</h1>
-            <p className="text-sm md:text-base text-secondary-500 font-medium mt-2">
-              Choose how you want to transact for your <span className="text-primary-600 font-bold">{wallet.currency} wallet</span>.
-            </p>
+          <div className="mb-8 md:mb-12 animate-fade-in flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+              <button 
+                onClick={() => navigate("/wallet")}
+                className="flex items-center gap-2 text-secondary-500 font-bold hover:text-primary-600 transition-colors mb-4 md:mb-6 group text-sm md:text-base"
+              >
+                <svg className="w-4 h-4 md:w-5 md:h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Wallets
+              </button>
+              <h1 className="text-2xl md:text-4xl font-black text-secondary-900 tracking-tight">Select Payment Method</h1>
+              <p className="text-sm md:text-base text-secondary-500 font-medium mt-2">
+                Choose how you want to transact for your <span className="text-primary-600 font-bold">{wallet.currency} wallet</span>.
+              </p>
+            </div>
+
+            <div className="flex p-1.5 bg-white rounded-2xl shadow-sm border border-secondary-100 min-w-[240px]">
+              <button
+                onClick={() => setTransactionType("deposit")}
+                className={`flex-1 py-3 px-6 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${
+                  transactionType === "deposit" 
+                    ? "bg-secondary-900 text-white shadow-lg" 
+                    : "text-secondary-400 hover:text-secondary-600 hover:bg-secondary-50"
+                }`}
+              >
+                Deposit
+              </button>
+              <button
+                onClick={() => setTransactionType("withdraw")}
+                className={`flex-1 py-3 px-6 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${
+                  transactionType === "withdraw" 
+                    ? "bg-secondary-900 text-white shadow-lg" 
+                    : "text-secondary-400 hover:text-secondary-600 hover:bg-secondary-50"
+                }`}
+              >
+                Withdraw
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          {fetchingMethods ? (
+            <div className="flex-1 flex flex-col items-center justify-center py-20">
+              <div className="w-12 h-12 border-4 border-primary-100 border-t-primary-600 rounded-full animate-spin"></div>
+              <p className="mt-4 text-secondary-500 font-bold uppercase tracking-widest text-xs">Fetching methods...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {paymentMethods.map((method) => (
               <button
                 key={method.paymentCode}
@@ -152,8 +270,9 @@ const Transact = () => {
               </button>
             ))}
           </div>
+          )}
 
-          {paymentMethods.length === 0 && (
+          {!fetchingMethods && paymentMethods.length === 0 && (
             <div className="flex-1 flex flex-col items-center justify-center py-20 animate-fade-in">
               <div className="w-20 h-20 bg-secondary-100 rounded-3xl flex items-center justify-center mb-6">
                 <svg className="w-10 h-10 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -207,35 +326,7 @@ const Transact = () => {
                 </button>
               </div>
 
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-secondary-400 font-black uppercase tracking-widest text-[10px] mb-3 ml-2">
-                    Transaction Type
-                  </label>
-                  <div className="grid grid-cols-2 gap-4 p-1.5 bg-secondary-100 rounded-[1.5rem]">
-                    <button
-                      onClick={() => setTransactionType("deposit")}
-                      className={`py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${
-                        transactionType === "deposit" 
-                          ? "bg-white text-secondary-900 shadow-sm" 
-                          : "text-secondary-400 hover:text-secondary-600"
-                      }`}
-                    >
-                      Deposit
-                    </button>
-                    <button
-                      onClick={() => setTransactionType("withdraw")}
-                      className={`py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${
-                        transactionType === "withdraw" 
-                          ? "bg-white text-secondary-900 shadow-sm" 
-                          : "text-secondary-400 hover:text-secondary-600"
-                      }`}
-                    >
-                      Withdraw
-                    </button>
-                  </div>
-                </div>
-
+              <div className="space-y-6 max-h-[60vh] overflow-y-auto px-1 custom-scrollbar">
                 <div>
                   <label className="block text-secondary-400 font-black uppercase tracking-widest text-[10px] mb-3 ml-2">
                     Amount ({wallet.currency})
@@ -260,6 +351,57 @@ const Transact = () => {
                   </div>
                 </div>
 
+                {/* Dynamic Additional Details Form */}
+                {selectedMethod.additionalDetails && Object.keys(selectedMethod.additionalDetails).length > 0 && (
+                  <div className="space-y-4 pt-4 border-t border-secondary-100">
+                    <p className="text-[10px] font-black text-secondary-400 uppercase tracking-[0.2em] ml-2">Beneficiary Details</p>
+                    {Object.entries(selectedMethod.additionalDetails).map(([key, schema]) => {
+                      if (key === 'documents' || key === 'purpose') return null; // Skip documents and purpose dropdown
+                      
+                      const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                      
+                      if (schema.enum) {
+                        return (
+                          <div key={key}>
+                            <label className="block text-secondary-500 font-bold text-[10px] mb-2 ml-2 uppercase tracking-wide">
+                              {label}
+                            </label>
+                            <select
+                              value={additionalData[key] || ""}
+                              onChange={(e) => handleAdditionalDataChange(key, e.target.value)}
+                              className="w-full px-5 py-4 bg-secondary-50 border-2 border-transparent focus:border-primary-500 rounded-2xl text-sm font-bold text-secondary-900 focus:outline-none transition-all"
+                            >
+                              <option value="">Select {label}</option>
+                              {schema.enum.map(opt => (
+                                <option key={opt} value={opt}>
+                                  {opt.replace(/_/g, ' ').replace(/^./, str => str.toUpperCase())}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div key={key}>
+                          <label className="block text-secondary-500 font-bold text-[10px] mb-2 ml-2 uppercase tracking-wide">
+                            {label}
+                          </label>
+                          <input
+                            type="text"
+                            placeholder={label}
+                            value={additionalData[key] || ""}
+                            onChange={(e) => handleAdditionalDataChange(key, e.target.value)}
+                            className="w-full px-5 py-4 bg-secondary-50 border-2 border-transparent focus:border-primary-500 rounded-2xl text-sm font-bold text-secondary-900 focus:outline-none transition-all"
+                            minLength={schema.min || schema.length}
+                            maxLength={schema.max || schema.length}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
                 <div className={`p-4 rounded-2xl border ${transactionType === 'deposit' ? 'bg-emerald-50/50 border-emerald-100 text-emerald-700' : 'bg-primary-50/50 border-primary-100 text-primary-700'}`}>
                   <div className="flex items-center gap-3">
                     <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -275,13 +417,23 @@ const Transact = () => {
 
                 <button 
                   onClick={initiateTransaction}
-                  disabled={!amount || isNaN(Number(amount.replace(/,/g, ""))) || Number(amount.replace(/,/g, "")) < selectedMethod.minAmount || Number(amount.replace(/,/g, "")) > selectedMethod.maxAmount}
+                  disabled={
+                    loading || 
+                    !amount || 
+                    isNaN(Number(amount.replace(/,/g, ""))) || 
+                    Number(amount.replace(/,/g, "")) < selectedMethod.minAmount || 
+                    Number(amount.replace(/,/g, "")) > selectedMethod.maxAmount ||
+                    (selectedMethod.additionalDetails?.accountNumber && (!additionalData.accountNumber || additionalData.accountNumber.length < 9))
+                  }
                   className={`w-full py-5 text-white rounded-3xl font-black text-lg transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-xl ${
                     transactionType === 'deposit' ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20' : 'bg-primary-600 hover:bg-primary-700 shadow-primary-500/20'
                   }`}
                 >
                   {loading ? (
-                    <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <span>{isPolling ? "Preparing Payment Session..." : "Processing..."}</span>
+                    </div>
                   ) : (
                     `Proceed to ${transactionType.charAt(0).toUpperCase() + transactionType.slice(1)}`
                   )}

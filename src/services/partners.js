@@ -109,5 +109,14 @@ export const getPaymentMethods = async (currency = "KES", direction = "deposit")
   }
 };
 
+export const getPaymentSession = async (txId) => {
+  try {
+    const response = await api.get(`/transactions/${txId}/payment-session`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data?.message || "Failed to fetch payment session";
+  }
+};
+
 
  
