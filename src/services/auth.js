@@ -105,6 +105,15 @@ export const forgotPasswordService = async (phoneOrEmail) => {
   }
 };
 
+export const getUserProfile = async () => {
+  try {
+    const response = await api.get('/auth/findOne');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data?.message || 'Failed to fetch user profile';
+  }
+};
+
 // Logout user
 export const logout = () => {
   clearTokens();

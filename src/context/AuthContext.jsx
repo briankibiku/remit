@@ -65,6 +65,10 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem("remit_user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [loading, setLoading] = useState(true);
 
   // Check if user is logged in on mount
@@ -72,7 +76,7 @@ export const AuthProvider = ({ children }) => {
     const checkAuth = () => {
       try {
         const token = getAccessToken();
-        setIsAuthenticated(!!token); // Set to true if token exists, false otherwise
+        setIsAuthenticated(!!token);
       } catch (error) {
         setIsAuthenticated(false);
       } finally {
@@ -83,20 +87,33 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  const login = () => {
+  const login = (userData = null) => {
     setIsAuthenticated(true);
+    if (userData) {
+      setUser(userData);
+      localStorage.setItem("remit_user", JSON.stringify(userData));
+    }
   };
 
   const logout = () => {
     logoutService(); // This clears tokens from localStorage
+    localStorage.removeItem("remit_user");
     setIsAuthenticated(false);
+    setUser(null);
     window.location.href = "/"; // Force redirect to login
+  };
+
+  const updateUser = (userData) => {
+    setUser(userData);
+    localStorage.setItem("remit_user", JSON.stringify(userData));
   };
 
   const value = {
     isAuthenticated,
+    user,
     login,
     logout,
+    updateUser,
     loading,
   };
 

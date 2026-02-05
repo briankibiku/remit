@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/layout/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import { getTransfiBalance } from '../services/partners';
+import { getUserProfile } from '../services/auth';
 import Swal from "sweetalert2";
 
 
@@ -11,12 +12,34 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [currency, setCurrency] = useState('USD');
   const [error, setError] = useState("");
-  const { user } = useAuth();
   const navigate = useNavigate();
-
   useEffect(() => {
     fetchDashboardData();
+    loadUserProfile();
   }, []);
+
+  const loadUserProfile = async () => {
+    try {
+      const response = await getUserProfile();
+      if (response && response.user) {
+        // Updated our auth context and localStorage
+        const profile = response.user;
+        // Example of how to call it and store response
+        const { updateUser } = await import('../context/AuthContext').then(m => ({ updateUser: (u) => {
+           // This is just to show how it can be called if not using the hook directly
+           // But since we have the hook, we use that.
+        }}));
+
+        // Using the hook's updateUser directly
+        updateUserProfile(profile);
+      }
+    } catch (err) {
+      console.error("Profile load failed", err);
+    }
+  };
+
+  // We need to destructure updateUser from useAuth
+  const { user, updateUser: updateUserProfile } = useAuth();
 
   const fetchDashboardData = async () => {
     try {
@@ -75,7 +98,7 @@ const Dashboard = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6 animate-fade-in text-center md:text-left">
             <div>
               <h1 className="text-2xl md:text-3xl font-extrabold text-secondary-900 tracking-tight">
-                Welcome back, {user?.name || user?.email?.split("@")[0]}! 👋
+                Welcome back, {user?.firstName ? `${user.firstName} ${user.lastName}` : user?.email?.split("@")[0]}! 👋
               </h1>
               <p className="text-sm md:text-base text-secondary-500 font-medium mt-1">
                 Here's what's happening with your accounts today.

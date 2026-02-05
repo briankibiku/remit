@@ -14,9 +14,9 @@ const Transact = () => {
   const [selectedMethod, setSelectedMethod] = useState(null);
   const [amount, setAmount] = useState("");
   const [transactionType, setTransactionType] = useState("deposit");
-  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [methodsData, setMethodsData] = useState({ deposit: [], withdraw: [] });
   const [loading, setLoading] = useState(false);
-  const [fetchingMethods, setFetchingMethods] = useState(false);
+  const [fetchingMethods, setFetchingMethods] = useState(true);
   const [isPolling, setIsPolling] = useState(false);
   const [additionalData, setAdditionalData] = useState({});
 
@@ -25,14 +25,22 @@ const Transact = () => {
       navigate("/wallet");
       return;
     }
-    fetchMethods();
-  }, [wallet, transactionType]);
+    fetchAllMethods();
+  }, [wallet]);
 
-  const fetchMethods = async () => {
+  const fetchAllMethods = async () => {
     try {
       setFetchingMethods(true);
-      const data = await getPaymentMethods(wallet.currency, transactionType);
-      setPaymentMethods(data.paymentMethods || []);
+      // Fetch both types in parallel for maximum performance and zero lag when switching
+      const [depositData, withdrawData] = await Promise.all([
+        getPaymentMethods(wallet.currency, "deposit"),
+        getPaymentMethods(wallet.currency, "withdraw")
+      ]);
+      
+      setMethodsData({
+        deposit: depositData.paymentMethods || [],
+        withdraw: withdrawData.paymentMethods || []
+      });
     } catch (err) {
       console.error("Failed to fetch payment methods:", err);
       showError("Failed to load payment methods");
@@ -94,15 +102,15 @@ const Transact = () => {
     const cleanAmount = amount.replace(/,/g, "");
     if (!selectedMethod || !cleanAmount || isNaN(cleanAmount) || Number(cleanAmount) <= 0) return;
 
-    // Open a blank window immediately on user gesture to bypass popup blockers
+    // IMPORTANT: Open blank window immediately to satisfy browser security requirements for popups
     const paymentWindow = window.open('about:blank', '_blank');
     if (paymentWindow) {
       paymentWindow.document.write(`
         <html>
-          <body style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; background: #f9fafb; margin: 0;">
-            <div style="border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite;"></div>
-            <h2 style="color: #111827; margin-top: 20px;">Preparing Payment Portal...</h2>
-            <p style="color: #6b7280; font-size: 14px;">Please do not close this window.</p>
+          <body style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: -apple-system, system-ui, sans-serif; background: #0f172a; color: white; text-align: center; padding: 20px;">
+            <div style="border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #6366f1; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite;"></div>
+            <h2 style="margin-top: 30px; font-weight: 800; tracking: tight;">REMIT SECURE PORTAL</h2>
+            <p style="color: #94a3b8; font-size: 15px;">Validating your secure payment session...</p>
             <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
           </body>
         </html>
@@ -137,7 +145,7 @@ const Transact = () => {
       if (response.txId) {
         setIsPolling(true);
         let pollCount = 0;
-        const maxPolls = 10;
+        const maxPolls = 30; // 30 seconds
 
         const pollInterval = setInterval(async () => {
           pollCount++;
@@ -147,14 +155,16 @@ const Transact = () => {
               clearInterval(pollInterval);
               setIsPolling(false);
               setLoading(false);
+              setIsModalOpen(false);
               
               if (paymentWindow && !paymentWindow.closed) {
                 paymentWindow.location.href = session.paymentUrl;
               } else {
-                // Fallback if user closed the tab or blocker won
-                window.location.href = session.paymentUrl;
+                // Fallback: If original tab was closed or blocked, attempt new win
+                window.open(session.paymentUrl, '_blank');
               }
               
+              showSuccess("Transaction initiated. Please check the new window.");
               navigate("/wallet");
             }
           } catch (err) {
@@ -167,7 +177,6 @@ const Transact = () => {
             setIsPolling(false);
             setLoading(false);
             showError("Payment session timed out. Please check your wallet for updates.");
-            navigate("/wallet");
           }
         }, 1000);
       } else {
@@ -239,7 +248,7 @@ const Transact = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {paymentMethods.map((method) => (
+            {methodsData[transactionType].map((method) => (
               <button
                 key={method.paymentCode}
                 onClick={() => handleMethodClick(method)}
@@ -272,7 +281,7 @@ const Transact = () => {
           </div>
           )}
 
-          {!fetchingMethods && paymentMethods.length === 0 && (
+          {!fetchingMethods && methodsData[transactionType].length === 0 && (
             <div className="flex-1 flex flex-col items-center justify-center py-20 animate-fade-in">
               <div className="w-20 h-20 bg-secondary-100 rounded-3xl flex items-center justify-center mb-6">
                 <svg className="w-10 h-10 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

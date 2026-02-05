@@ -71,6 +71,7 @@ function App() {
             }
           />
 
+
           {/* Default Route - Redirect to dashboard */}
           <Route path="/" element={<Landing />} />
 
