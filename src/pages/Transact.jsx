@@ -3,12 +3,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "../components/layout/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import { transactService, getPaymentMethods, getPaymentSession } from "../services/partners";
+import { buildTransactionPayload } from "../utils/payloadBuilder";
 import Swal from "sweetalert2";
 
 const Transact = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { wallet } = location.state || { wallet: null };
+  const { user } = useAuth();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState(null);
@@ -87,7 +89,20 @@ const Transact = () => {
   const handleMethodClick = (method) => {
     setSelectedMethod(method);
     setAmount("");
-    setAdditionalData({});
+    
+    // Pre-populate address info from user profile for USD withdrawals
+    let initialData = {};
+    if (transactionType === "withdraw" && wallet.currency === "USD") {
+      initialData = {
+        street: user?.address?.street || "",
+        city: user?.address?.city || "",
+        state: user?.address?.state || "",
+        postalCode: user?.address?.postalCode || "",
+        country: user?.country || ""
+      };
+    }
+    
+    setAdditionalData(initialData);
     setIsModalOpen(true);
   };
 
@@ -102,47 +117,39 @@ const Transact = () => {
     const cleanAmount = amount.replace(/,/g, "");
     if (!selectedMethod || !cleanAmount || isNaN(cleanAmount) || Number(cleanAmount) <= 0) return;
 
-    // IMPORTANT: Open blank window immediately to satisfy browser security requirements for popups
-    const paymentWindow = window.open('about:blank', '_blank');
-    if (paymentWindow) {
-      paymentWindow.document.write(`
-        <html>
-          <body style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: -apple-system, system-ui, sans-serif; background: #0f172a; color: white; text-align: center; padding: 20px;">
-            <div style="border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #6366f1; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite;"></div>
-            <h2 style="margin-top: 30px; font-weight: 800; tracking: tight;">REMIT SECURE PORTAL</h2>
-            <p style="color: #94a3b8; font-size: 15px;">Validating your secure payment session...</p>
-            <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
-          </body>
-        </html>
-      `);
+    // IMPORTANT: Open blank window immediately ONLY for deposits to satisfy browser security requirements
+    let paymentWindow = null;
+    if (transactionType === "deposit") {
+      paymentWindow = window.open('about:blank', '_blank');
+      if (paymentWindow) {
+        paymentWindow.document.write(`
+          <html>
+            <body style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: -apple-system, system-ui, sans-serif; background: #0f172a; color: white; text-align: center; padding: 20px;">
+              <div style="border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #6366f1; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite;"></div>
+              <h2 style="margin-top: 30px; font-weight: 800; tracking: tight;">REMIT SECURE PORTAL</h2>
+              <p style="color: #94a3b8; font-size: 15px;">Validating your secure payment session...</p>
+              <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+            </body>
+          </html>
+        `);
+      }
     }
 
     try {
       setLoading(true);
       
-      const payload = {
+      const payload = buildTransactionPayload({
         type: transactionType,
-        walletId: wallet.id,
-        idempotencyKey: crypto.randomUUID(),
-        paymentCode: selectedMethod.paymentCode,
-        paymentType: selectedMethod.paymentType,
+        amount: cleanAmount,
         currency: wallet.currency,
-        amount: Number(cleanAmount).toFixed(0),
-        additionalDetails: {
-          ...additionalData,
-          phone: additionalData.phone || "724609783",
-          phoneCode: additionalData.phoneCode || "+254",
-          purpose: "payment_for_business_services"
-        },
-        purposeCode:  "expense_or_medical_reimbursement",
-        redirectUrl: "https://propel.ke",
-        sourceUrl: "https://transfi.com",
-        headlessMode: false, 
-      };
+        walletId: wallet.id,
+        selectedMethod,
+        additionalData
+      }, user);
 
       const response = await transactService(payload);
       
-      if (response.txId) {
+      if (transactionType === "deposit" && response.txId) {
         setIsPolling(true);
         let pollCount = 0;
         const maxPolls = 30; // 30 seconds
@@ -164,7 +171,7 @@ const Transact = () => {
                 window.open(session.paymentUrl, '_blank');
               }
               
-              showSuccess("Transaction initiated. Please check the new window.");
+              showSuccess("Deposit initiated. Please check the new window.");
               navigate("/wallet");
             }
           } catch (err) {
@@ -180,6 +187,7 @@ const Transact = () => {
           }
         }, 1000);
       } else {
+        // Withdrawal or deposit without txId (instant success)
         if (paymentWindow) paymentWindow.close();
         setIsModalOpen(false);
         showSuccess(`${transactionType.charAt(0).toUpperCase() + transactionType.slice(1)} request initiated successfully!`);
@@ -367,6 +375,12 @@ const Transact = () => {
                     {Object.entries(selectedMethod.additionalDetails).map(([key, schema]) => {
                       if (key === 'documents' || key === 'purpose') return null; // Skip documents and purpose dropdown
                       
+                      // Skip pre-populated address fields for USD withdrawals
+                      const addressFields = ['street', 'city', 'state', 'postalCode', 'country'];
+                      if (transactionType === "withdraw" && wallet.currency === "USD" && addressFields.includes(key)) {
+                        return null;
+                      }
+
                       const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
                       
                       if (schema.enum) {
