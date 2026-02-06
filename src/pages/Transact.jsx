@@ -98,7 +98,9 @@ const Transact = () => {
         city: user?.address?.city || "",
         state: user?.address?.state || "",
         postalCode: user?.address?.postalCode || "",
-        country: user?.country || ""
+        country: user?.country || "",
+        purpose: "payment_for_business_services",
+        documents: [{type: "invoice", url: "https://transfi.com/"}]
       };
     }
     
