@@ -78,7 +78,7 @@ api.interceptors.response.use(
     // If error is 401 (Unauthorized) and we haven't tried to refresh yet
     if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.skipAuthRefresh) {
       // Don't refresh on login or validate endpoints
-      if (originalRequest.url.includes('/login') || originalRequest.url.includes('/validate')) {
+      if (originalRequest.url.includes('/partner-login') || originalRequest.url.includes('/validate')) {
         return Promise.reject(error);
       }
 
@@ -101,9 +101,9 @@ api.interceptors.response.use(
       if (!refreshToken) {
         // If no refresh token, and we are not on a public page, redirect to login
         // But for partner login page, we might just want to fail without redirecting
-        if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/signup')) {
+        if (!window.location.pathname.includes('/partner-login') && !window.location.pathname.includes('/partner-signup')) {
           clearTokens();
-          window.location.href = '/login';
+          window.location.href = '/partner-login';
         }
         return Promise.reject(error);
       }
@@ -142,7 +142,7 @@ api.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
         clearTokens();
-        window.location.href = '/login';
+        window.location.href = '/partner-login';
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

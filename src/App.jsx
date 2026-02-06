@@ -12,6 +12,7 @@ import Landing from './pages/Landing';
 import ApiPartnerLogin from './pages/PartnerLogin';
 import PartnerSignup from './pages/PartnerSignup';
 import PartnerDashboard from './pages/PartnerDashboard';
+import Docs from './pages/Docs';
 
 function App() {
   return (
@@ -34,8 +35,16 @@ function App() {
           <Route 
             path="/api-keys" 
             element={
-              <ProtectedRoute allowedRoles={['user', 'admin']}>
+              <ProtectedRoute allowedRoles={['user', 'admin', 'api_partner']}>
                 <ApiKeys />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/docs" 
+            element={
+              <ProtectedRoute allowedRoles={['user', 'admin', 'api_partner']}>
+                <Docs />
               </ProtectedRoute>
             } 
           />

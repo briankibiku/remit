@@ -124,7 +124,7 @@ export const signup = async (
 // Logout user
 export const logout = () => {
   clearTokens();
-  window.location.href = '/';
+  window.location.href = '/partner-login';
 };
 
 // Check if user is authenticated

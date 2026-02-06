@@ -23,6 +23,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     // If a partner tries to access regular dashboard, send them back to partner dashboard
     if (user?.role === 'api_partner') {
       return <Navigate to="/partner-dashboard" replace />;
+      
     }
     // Otherwise, redirect to common landing or login
     return <Navigate to="/" replace />;

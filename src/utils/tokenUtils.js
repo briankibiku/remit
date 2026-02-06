@@ -14,12 +14,14 @@ export const getRefreshToken = () => localStorage.getItem('refreshToken');
 export const clearTokens = () => {
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
+  localStorage.removeItem('partner_profile');
 };
+
 
 // Check if token is expired
 export const isTokenExpired = (token) => {
   if (!token) return true;
-  
+
   try {
     const decoded = jwtDecode(token);
     // decoded.exp is in seconds, Date.now() is in milliseconds
@@ -32,7 +34,7 @@ export const isTokenExpired = (token) => {
 // Get user info from token
 export const getUserFromToken = (token) => {
   if (!token) return null;
-  
+
   try {
     return jwtDecode(token);
   } catch (error) {
